@@ -1,0 +1,17 @@
+/* アプリ全体の土台だけを整えるCSS。
+   画面の見た目は src/ShingakuNavi.jsx の中の CSS で作られています。 */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f1f6f4;
+}
