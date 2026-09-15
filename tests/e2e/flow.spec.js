@@ -107,6 +107,101 @@ test("公式サイトのリンクが安全な設定で開く", async ({ page }) 
   }
 });
 
+test("折りたたみが開閉できる", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "質問を始める" }).click();
+  for (const 答え of 回答パターンA) {
+    await page.getByRole("button", { name: 答え, exact: true }).click();
+  }
+
+  const 折りたたみ = page.locator(".sn-more");
+  const つまみ = 折りたたみ.locator("summary");
+
+  // 最初は中身が見えていない
+  await expect(折りたたみ.locator("article").first()).toBeHidden();
+
+  await つまみ.click();
+  await expect(折りたたみ.locator("article").first()).toBeVisible();
+
+  await つまみ.click();
+  await expect(折りたたみ.locator("article").first()).toBeHidden();
+});
+
+test("結果画面が最初から全部は開いていない（スマホで長すぎない）", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "質問を始める" }).click();
+  for (const 答え of 回答パターンA) {
+    await page.getByRole("button", { name: 答え, exact: true }).click();
+  }
+
+  const 見えているカード = await page.locator("article.sn-card:visible").count();
+  const 全部のカード = await page.locator("article.sn-card").count();
+
+  expect(全部のカード).toBe(7);
+  expect(見えているカード).toBeLessThan(全部のカード);
+});
+
+test("ブラウザの戻るボタンでサイトから出ない", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "質問を始める" }).click();
+  await page.getByRole("button", { name: "高校2年生", exact: true }).click();
+  await page.getByRole("button", { name: "私立を考えている", exact: true }).click();
+  await expect(page.getByText("質問 3 / 6")).toBeVisible();
+
+  // 1回戻る → 2問目へ
+  await page.goBack();
+  await expect(page.getByText("質問 2 / 6")).toBeVisible();
+
+  // もう1回戻る → 1問目へ。回答は残っている
+  await page.goBack();
+  await expect(
+    page.getByRole("heading", { name: "いまの学年を教えてください" })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "高校2年生", exact: true })
+  ).toHaveClass(/sn-option-selected/);
+
+  // さらに戻る → トップページ。まだサイトの中にいる
+  await page.goBack();
+  await expect(
+    page.getByRole("button", { name: "質問を始める" })
+  ).toBeVisible();
+});
+
+test("結果画面から戻ると最後の質問に戻る", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "質問を始める" }).click();
+  for (const 答え of 回答パターンA) {
+    await page.getByRole("button", { name: 答え, exact: true }).click();
+  }
+  await expect(
+    page.getByRole("heading", { name: "確認してみるとよい支援" })
+  ).toBeVisible();
+
+  await page.goBack();
+  await expect(
+    page.getByRole("heading", {
+      name: "児童養護施設や里親家庭で暮らした経験はありますか",
+    })
+  ).toBeVisible();
+});
+
+test("見出しの階層が正しい", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "質問を始める" }).click();
+  for (const 答え of 回答パターンA) {
+    await page.getByRole("button", { name: 答え, exact: true }).click();
+  }
+
+  await expect(page.locator("h1")).toHaveCount(1);
+  await expect(page.locator("h1")).toHaveText("進学支援ナビ");
+
+  // 相談先の見出しが、見た目だけの文字ではなく見出しになっている
+  await expect(
+    page.getByRole("heading", { name: "一人で判断する必要はありません" })
+  ).toBeVisible();
+});
+
 test("ページの読み込みでエラーが出ない", async ({ page }) => {
   const エラー = [];
   page.on("pageerror", (e) => エラー.push(`JavaScriptエラー: ${e.message}`));

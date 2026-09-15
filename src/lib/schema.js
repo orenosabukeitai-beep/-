@@ -54,6 +54,14 @@ export const すべての項目 = [
 /** status に使ってよい値 */
 export const 使える状態 = ["draft", "verified"];
 
+/**
+ * シグナルの強さに使ってよい値。
+ *
+ * strong は「受け取れる見込みが高い」という意味ではありません。
+ * 「その人の回答から見て、特に確認する価値がある」という意味だけです。
+ */
+export const 使えるシグナルの強さ = ["strong", "normal"];
+
 /** 日付は「2026-09-15」の形で書く */
 const 日付の形 = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -105,12 +113,69 @@ export function 制度データを調べる(制度) {
     問題.push("「whyCheck」は [ ] で囲んだ一覧にしてください。");
   }
 
+  問題.push(...matchingを調べる(制度.matching));
+
+  return 問題;
+}
+
+/** matching（どんな回答の人に出すか）の書き方を調べる */
+function matchingを調べる(matching) {
+  const 問題 = [];
+
   if (
-    制度.matching !== undefined &&
-    (typeof 制度.matching !== "object" || 制度.matching === null || Array.isArray(制度.matching))
+    matching === undefined ||
+    typeof matching !== "object" ||
+    matching === null ||
+    Array.isArray(matching)
   ) {
-    問題.push("「matching」は { } で囲んだ形にしてください。");
+    return ["「matching」は { } で囲んだ形にしてください。"];
   }
+
+  const 知らない項目 = Object.keys(matching).filter(
+    (項目) => !["excludeIf", "signals"].includes(項目)
+  );
+  if (知らない項目.length > 0) {
+    問題.push(
+      `「matching」に使えるのは excludeIf と signals だけです（いまは ${知らない項目.join(", ")} が入っています）。`
+    );
+  }
+
+  if (
+    matching.excludeIf !== undefined &&
+    (typeof matching.excludeIf !== "object" ||
+      matching.excludeIf === null ||
+      Array.isArray(matching.excludeIf))
+  ) {
+    問題.push("「excludeIf」は { } で囲んだ形にしてください。");
+  }
+
+  if (matching.signals !== undefined && !Array.isArray(matching.signals)) {
+    問題.push("「signals」は [ ] で囲んだ一覧にしてください。");
+    return 問題;
+  }
+
+  (matching.signals || []).forEach((シグナル, 番号) => {
+    const 場所 = `signals の ${番号 + 1} 件目`;
+
+    if (
+      typeof シグナル.when !== "object" ||
+      シグナル.when === null ||
+      Array.isArray(シグナル.when) ||
+      Object.keys(シグナル.when).length === 0
+    ) {
+      問題.push(`${場所}: 「when」に、どの回答のときかを書いてください。`);
+    }
+
+    if (typeof シグナル.reason !== "string" || シグナル.reason === "") {
+      問題.push(`${場所}: 「reason」に、確認するとよい理由を書いてください。`);
+    }
+
+    if (!使えるシグナルの強さ.includes(シグナル.strength)) {
+      問題.push(
+        `${場所}: 「strength」は ${使えるシグナルの強さ.join(" か ")} にしてください（いまは「${シグナル.strength}」）。`
+      );
+    }
+  });
 
   return 問題;
 }

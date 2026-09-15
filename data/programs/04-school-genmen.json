@@ -19,5 +19,14 @@
   "checkedAt": null,
   "notes": null,
   "status": "draft",
-  "matching": {}
+  "matching": {
+    "excludeIf": {},
+    "signals": [
+      {
+        "when": { "schoolType": ["national", "private", "both"] },
+        "reason": "進学先の方向を考えていると答えたため、志望校のサイトで学費と支援をあわせて確認できます。",
+        "strength": "normal"
+      }
+    ]
+  }
 }

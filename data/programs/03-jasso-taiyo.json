@@ -19,5 +19,14 @@
   "checkedAt": null,
   "notes": null,
   "status": "draft",
-  "matching": {}
+  "matching": {
+    "excludeIf": {},
+    "signals": [
+      {
+        "when": { "familySupport": ["difficult", "partial", "unknown"] },
+        "reason": "給付型だけでは足りないときに組み合わせて使う人が多いため、仕組みを知っておくと選べる道が増えます。",
+        "strength": "normal"
+      }
+    ]
+  }
 }

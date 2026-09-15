@@ -16,5 +16,8 @@
   "checkedAt": null,
   "notes": null,
   "status": "draft",
-  "matching": {}
+  "matching": {
+    "excludeIf": {},
+    "signals": []
+  }
 }

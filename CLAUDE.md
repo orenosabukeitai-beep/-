@@ -41,7 +41,8 @@ src/main.jsx                アプリの起動
 src/index.css               背景と高さだけの最小限のCSS
 src/lib/loadPrograms.js     data/programs/ を自動で読み込む
 src/lib/schema.js           制度データの決まりごとと検査
-src/ShingakuNavi.jsx        アプリ本体（質問・判定・画面）
+src/lib/matching.js         回答から制度の確認順を決める
+src/ShingakuNavi.jsx        アプリ本体（質問・画面）
 ```
 
 `src/ShingakuNavi.jsx` の中は、上から順にこうなっている。
@@ -49,12 +50,12 @@ src/ShingakuNavi.jsx        アプリ本体（質問・判定・画面）
 | 名前 | 中身 |
 | --- | --- |
 | `SHIENDATA` | `data/programs/` から読み込んだ制度データ（ここには直接書かない） |
-| `QUESTIONS` | STEP 1 の質問と選択肢 |
+| `QUESTIONS` | STEP 1 の質問と選択肢。各質問が `purpose` と `usedForMatching` を持つ |
 | `ACTION_POOL` | STEP 3 の「次にやること」の候補。`priority` が小さいほど上に出る |
 | `CSS` | 画面のスタイル |
-| `matchPrograms` / `buildActions` / `buildHints` | 回答から表示内容を決める処理 |
-| `Intro` / `Question` / `ProgramCard` / `Result` | 各画面 |
-| `ShingakuNavi` | 全体の進行管理 |
+| `classifyForAnswers` / `buildActions` / `buildHints` | 回答から表示内容を決める処理 |
+| `Intro` / `Question` / `ProgramCard` / `ProgramGroup` / `Result` | 各画面 |
+| `ShingakuNavi` | 全体の進行管理とブラウザの戻る対応 |
 
 ## 制度データの扱い
 
@@ -70,14 +71,50 @@ src/ShingakuNavi.jsx        アプリ本体（質問・判定・画面）
 分からない項目は `null` にする。推測で埋めない。
 `verified` にするときは `checkedAt`（確認日）と `officialUrl` を必ず入れる。
 
-### マッチング結果を変えないこと
+### 確認する順番の決め方（第3段階で実装）
 
-`tests/fixtures/matching-baseline.json` に、回答1,728通りの結果が記録してある。
-`tests/matching.test.js` がこれと突き合わせるため、マッチングの挙動を変えると失敗する。
+`matching` は「受けられるかどうか」を判定しない。決めるのは**確認する順番だけ**。
 
-第3段階でマッチングを意図的に改善するときは、基準データを作り直したうえで、
-「何をなぜ変えたか」をコミットメッセージに書く。それ以外の段階で基準データを
-書き換えてはいけない。
+```
+excludeIf … 公式条件と回答を照らして、明らかに当てはまらないときだけ除外する
+signals   … 確認する価値があると言える手がかり（strength は strong / normal）
+```
+
+守ること。
+
+1. **除外は極力しない。迷ったら残す。**
+   「分からない」「答えない」「未回答」で除外してはいけない（`分からないことを表す回答`）。
+   公式に書いていない条件を推測して `excludeIf` に書いてはいけない。
+   除外条件を決められない制度は `"excludeIf": {}` のままでよい。
+2. **`strong` は「受け取れる見込みが高い」ではない。**
+   「その人の回答から見て、特に確認する価値がある」という意味だけ。
+3. **画面に「おすすめ度」「適合度」「受給可能性」等を出さない。**
+   受給資格を推測しているように見える表現はすべて禁止。
+4. `reason` はそのまま画面に出る。資格判定につながる書き方をしない。
+
+処理は `src/lib/matching.js`。グループ分けは
+「strong あり → 特に確認したほうがよい」「シグナルあり → 確認する価値がある」
+「シグナルなし → 知っておくとよい（折りたたみ）」。
+
+### 質問の役割
+
+各質問は `purpose` と `usedForMatching` を持つ。
+`usedForMatching` が制度データの実態とずれると `tests/matching.test.js` が失敗する。
+
+パーソナライズされている感じを出すためだけに、制度の公式条件と関係のない質問を
+制度の絞り込みへ使わないこと。`living` と `researched` は、あえて制度の確認順に
+使っていない（ヒントと行動計画にだけ使う）。
+
+### Ver.0 の記録を書き換えないこと
+
+`tests/fixtures/ver0-matching-baseline.json` は、第3段階より前の
+Ver.0 のマッチング結果1,728通りの記録。
+
+Ver.1 はマッチングを意図的に変えたので、これと完全一致することは求めない。
+代わりに `tests/matching.test.js` が
+**「Ver.0 で見えていた制度が、Ver.1 で見えなくなっていないこと」**を確かめている。
+
+テストを通すためにこのファイルを書き換えてはいけない。
 
 ## 開発
 

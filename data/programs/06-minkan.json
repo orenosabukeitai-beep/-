@@ -19,5 +19,19 @@
   "checkedAt": null,
   "notes": null,
   "status": "draft",
-  "matching": {}
+  "matching": {
+    "excludeIf": {},
+    "signals": [
+      {
+        "when": { "familySupport": ["difficult", "partial", "unknown"] },
+        "reason": "返さなくてよいものが多く、国の制度と重ねて使える場合があるため、あわせて確認する価値があります。",
+        "strength": "normal"
+      },
+      {
+        "when": { "grade": ["hs3", "graduate"] },
+        "reason": "進学までの時間が短いため、募集の時期を早めに確認しておくと間に合います。",
+        "strength": "normal"
+      }
+    ]
+  }
 }

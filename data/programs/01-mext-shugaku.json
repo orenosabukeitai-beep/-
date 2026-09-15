@@ -21,6 +21,13 @@
   "notes": null,
   "status": "draft",
   "matching": {
-    "familySupport": ["difficult", "partial", "unknown"]
+    "excludeIf": {},
+    "signals": [
+      {
+        "when": { "familySupport": ["difficult", "partial", "unknown"] },
+        "reason": "学費を家の人に出してもらうのが難しい、または分からないと答えたため、最初に確認しておきたい制度です。",
+        "strength": "strong"
+      }
+    ]
   }
 }

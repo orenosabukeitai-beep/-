@@ -10,7 +10,7 @@
  * 利用者から見た動きが同じなら、テストは通り続けます。
  */
 
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, beforeEach } from "vitest";
 import ShingakuNavi from "../src/ShingakuNavi.jsx";
@@ -25,13 +25,23 @@ const 回答パターンA = [
   "ある / いま暮らしている",
 ];
 
-/** 回答パターンB：学費を出してもらえそうで、施設の質問には答えない人 */
+/** 回答パターンB：学費を出してもらえそうで、施設経験は「ない」と答えた人 */
 const 回答パターンB = [
   "高校3年生",
   "国公立を考えている",
   "自宅から通う予定",
   "だいたい出してもらえそう",
   "申し込みを考えている制度がある",
+  "ない",
+];
+
+/** 回答パターンC：パターンAと同じだが、施設の質問には答えない人 */
+const 回答パターンC = [
+  "高校2年生",
+  "私立を考えている",
+  "一人暮らしの予定",
+  "難しいと思う",
+  "まだ調べていない",
   "答えない",
 ];
 
@@ -54,11 +64,36 @@ async function 最後まで回答する(回答リスト) {
   }
 }
 
-/** いま表示されている制度カードの制度名を集める */
+/** 画面にある制度カードの制度名を集める（折りたたみの中も含む） */
 function 表示中の制度名() {
   return screen
     .queryAllByRole("article")
     .map((カード) => within(カード).getByRole("heading").textContent);
+}
+
+/** 折りたたみを開かなくても、最初から見えている制度名 */
+function 最初から見える制度名() {
+  return [...document.querySelectorAll(".sn-group article")].map(
+    (カード) => within(カード).getByRole("heading").textContent
+  );
+}
+
+/** 指定したグループに入っている制度名 */
+function グループの制度名(見出し) {
+  const グループ = [...document.querySelectorAll(".sn-group")].find(
+    (要素) => 要素.querySelector(".sn-group-title")?.textContent === 見出し
+  );
+  if (!グループ) return [];
+  return [...グループ.querySelectorAll("article")].map(
+    (カード) => within(カード).getByRole("heading").textContent
+  );
+}
+
+/** 折りたたみ（知っておくとよい制度）の中の制度名 */
+function 折りたたみの中の制度名() {
+  return [...document.querySelectorAll(".sn-more article")].map(
+    (カード) => within(カード).getByRole("heading").textContent
+  );
 }
 
 describe("トップページ", () => {
@@ -219,11 +254,10 @@ describe("任意の質問をスキップできる", () => {
   });
 
   it("【重要】答えなかったことを理由に制度が減らされない", async () => {
-    // 施設の質問に「答えない」を選んだ人と、「ない」と答えた人で、
-    // 表示される制度が同じであることを確認する。
-    // 「答えなかったから候補が減る」という設計にしてはいけない。
+    // 施設の質問に「答えない」を選んだ人に、制度が少なく出てはいけない。
+    // 答えたくなかっただけの人に、情報が届かなくなるのを防ぐため。
     const { unmount } = render(<ShingakuNavi />);
-    await 最後まで回答する([...回答パターンA.slice(0, 5), "答えない"]);
+    await 最後まで回答する(回答パターンC);
     const とばした場合 = 表示中の制度名();
     unmount();
 
@@ -231,7 +265,19 @@ describe("任意の質問をスキップできる", () => {
     await 最後まで回答する([...回答パターンA.slice(0, 5), "ない"]);
     const 答えた場合 = 表示中の制度名();
 
-    expect(とばした場合).toEqual(答えた場合);
+    expect(とばした場合.length).toBeGreaterThanOrEqual(答えた場合.length);
+    for (const 制度 of 答えた場合) {
+      expect(とばした場合).toContain(制度);
+    }
+  });
+
+  it("【重要】施設の質問をとばしても、専用の支援は隠されない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンC);
+
+    expect(表示中の制度名()).toContain(
+      "児童養護施設等で暮らした経験のある人への進学支援"
+    );
   });
 });
 
@@ -354,6 +400,264 @@ describe("結果画面", () => {
 
     // どの選択肢も選ばれていない状態に戻っている
     expect(document.querySelectorAll(".sn-option-selected")).toHaveLength(0);
+  });
+});
+
+describe("結果画面：3つのグループ分け（Ver.1）", () => {
+  it("グループの見出しが表示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    expect(
+      screen.getByRole("heading", { name: "特に確認したほうがよい制度" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "確認する価値がある制度" })
+    ).toBeInTheDocument();
+  });
+
+  it("strong シグナルのある制度が「特に確認したほうがよい」に入る", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 優先 = グループの制度名("特に確認したほうがよい制度");
+    expect(優先).toContain("高等教育の修学支援新制度");
+    expect(優先).toContain("児童養護施設等で暮らした経験のある人への進学支援");
+  });
+
+  it("normal だけの制度が「確認する価値がある」に入る", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 価値あり = グループの制度名("確認する価値がある制度");
+    expect(価値あり).toContain("日本学生支援機構（JASSO）の貸与型奨学金");
+  });
+
+  it("シグナルの無い制度は折りたたみの中に入る", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    expect(折りたたみの中の制度名()).toContain("住んでいる自治体の奨学金・支援");
+  });
+
+  it("【重要】受給の見込みを思わせる表現を使っていない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 画面の文字 = document.body.textContent;
+    for (const 禁止語 of ["おすすめ度", "適合度", "受給可能性", "マッチ度", "％"]) {
+      expect(画面の文字, `「${禁止語}」は使ってはいけません`).not.toContain(禁止語);
+    }
+  });
+
+  it("結果画面が Ver.0 より短くなっている（最初に見える制度が減った）", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    // Ver.0 はこの回答で7件すべてを広げて表示していた
+    expect(最初から見える制度名().length).toBeLessThan(7);
+    // それでも、折りたたみを含めれば情報は減っていない
+    expect(表示中の制度名().length).toBe(7);
+  });
+});
+
+describe("結果画面：折りたたみの開閉", () => {
+  it("最初は閉じている", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 折りたたみ = document.querySelector(".sn-more");
+    expect(折りたたみ).not.toBeNull();
+    expect(折りたたみ.open).toBe(false);
+  });
+
+  it("件数つきの見出しが出ている", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    expect(screen.getByText(/ほかにも確認できる制度があります（\d+件）/)).toBeInTheDocument();
+  });
+
+  it("押すと開き、もう一度押すと閉じる", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 折りたたみ = document.querySelector(".sn-more");
+    const つまみ = 折りたたみ.querySelector("summary");
+
+    await user.click(つまみ);
+    expect(折りたたみ.open).toBe(true);
+
+    await user.click(つまみ);
+    expect(折りたたみ.open).toBe(false);
+  });
+
+  // 「上の2グループが空のときは最初から開く」動きは、
+  // いまの7制度ではどう答えても①か②に必ず1件入るため、ここでは再現できません。
+  // 制度データを差し替えられる tests/all-collapsed.test.jsx で確認しています。
+});
+
+describe("候補になった理由が回答と連動する", () => {
+  it("家計が苦しいと答えると、その回答にふれた理由が出る", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    // 複数の制度に、回答と結びついた理由が付く
+    expect(
+      screen.getAllByText(/学費を家の人に出してもらうのが難しい.*と答えたため/).length
+    ).toBeGreaterThan(0);
+  });
+
+  it("施設経験があると答えると、その回答にふれた理由が出る", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    expect(
+      screen.getByText(/施設や里親家庭で暮らした経験があると答えたため/)
+    ).toBeInTheDocument();
+  });
+
+  it("回答が変わると、出てくる理由も変わる", async () => {
+    const { unmount } = render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+    const Aの理由 = [...document.querySelectorAll(".sn-why-linked li")].map(
+      (要素) => 要素.textContent
+    );
+    unmount();
+
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンB);
+    const Bの理由 = [...document.querySelectorAll(".sn-why-linked li")].map(
+      (要素) => 要素.textContent
+    );
+
+    expect(Aの理由).not.toEqual(Bの理由);
+    expect(Aの理由.length).toBeGreaterThan(0);
+  });
+
+  it("制度ごとの固定の理由も、あわせて表示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    expect(
+      screen.getByText(
+        "家庭から学費を出してもらうのが難しい人が、最初に確認することが多い制度です。"
+      )
+    ).toBeInTheDocument();
+  });
+});
+
+describe("見出しの階層（読み上げソフト対応）", () => {
+  it("どの画面にも h1 がある", async () => {
+    render(<ShingakuNavi />);
+    expect(document.querySelectorAll("h1")).toHaveLength(1);
+    expect(document.querySelector("h1").textContent).toBe("進学支援ナビ");
+
+    await user.click(screen.getByRole("button", { name: "質問を始める" }));
+    expect(document.querySelectorAll("h1")).toHaveLength(1);
+
+    for (const 回答 of 回答パターンA) await 選ぶ(回答);
+    expect(document.querySelectorAll("h1")).toHaveLength(1);
+  });
+
+  it("相談先の見出しが、見出しタグになっている", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    // 第1・第2段階では div だった。第3段階で修正した。
+    const 見出し = screen.getByRole("heading", {
+      name: "一人で判断する必要はありません",
+    });
+    expect(見出し.tagName).toBe("H2");
+  });
+
+  it("見出しの深さが飛び級していない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 深さ = [...document.querySelectorAll("h1,h2,h3,h4,h5,h6")].map((要素) =>
+      Number(要素.tagName[1])
+    );
+
+    expect(深さ[0]).toBe(1);
+    for (let i = 1; i < 深さ.length; i++) {
+      // h2 のあとに h4 が来るような飛び方をしていないか
+      expect(深さ[i] - 深さ[i - 1]).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+describe("ブラウザの戻るボタン", () => {
+  it("質問の途中で戻ると、1つ前の質問に戻る", async () => {
+    render(<ShingakuNavi />);
+    await user.click(screen.getByRole("button", { name: "質問を始める" }));
+    await 選ぶ("高校2年生");
+    await 選ぶ("私立を考えている");
+    expect(screen.getByText("質問 3 / 6")).toBeInTheDocument();
+
+    window.history.back();
+    await waitFor(() =>
+      expect(screen.getByText("質問 2 / 6")).toBeInTheDocument()
+    );
+  });
+
+  it("【重要】戻っても回答が消えない", async () => {
+    render(<ShingakuNavi />);
+    await user.click(screen.getByRole("button", { name: "質問を始める" }));
+    await 選ぶ("高校2年生");
+
+    window.history.back();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { name: "いまの学年を教えてください" })
+      ).toBeInTheDocument()
+    );
+
+    expect(screen.getByRole("button", { name: "高校2年生" })).toHaveClass(
+      "sn-option-selected"
+    );
+  });
+
+  it("最初の質問から戻ると、トップページに戻る", async () => {
+    render(<ShingakuNavi />);
+    await user.click(screen.getByRole("button", { name: "質問を始める" }));
+
+    window.history.back();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "質問を始める" })
+      ).toBeInTheDocument()
+    );
+  });
+
+  it("結果画面から戻ると、最後の質問に戻る", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+    expect(
+      screen.getByRole("heading", { name: "確認してみるとよい支援" })
+    ).toBeInTheDocument();
+
+    window.history.back();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", {
+          name: "児童養護施設や里親家庭で暮らした経験はありますか",
+        })
+      ).toBeInTheDocument()
+    );
+  });
+
+  it("画面の「前の質問にもどる」も同じように動く", async () => {
+    render(<ShingakuNavi />);
+    await user.click(screen.getByRole("button", { name: "質問を始める" }));
+    await 選ぶ("高校2年生");
+
+    await user.click(screen.getByRole("button", { name: "前の質問にもどる" }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { name: "いまの学年を教えてください" })
+      ).toBeInTheDocument()
+    );
   });
 });
 

@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import 制度データ from "./lib/loadPrograms.js";
+import { 制度を分類する } from "./lib/matching.js";
 
 /* ============================================================
    進学支援ナビ
@@ -23,11 +24,21 @@ const SHIENDATA = 制度データ;
 
 /* ============================================================
    質問（STEP 1）
+
+   質問はどれも「聞く理由」を持たせています。
+     purpose         … この質問を何に使っているか
+     usedForMatching … 制度の確認順を決めるのに使うかどうか
+
+   パーソナライズされている感じを出すためだけに、
+   制度の公式条件と関係のない質問を制度の絞り込みへ使わないこと。
+   （living と researched は、あえて制度の確認順には使っていません）
    ============================================================ */
 
-const QUESTIONS = [
+export const QUESTIONS = [
   {
     key: "grade",
+    purpose: "行動計画の優先順位（3年生なら今週中に先生へ伝える、など）と、申し込み時期にかかわる制度の確認順",
+    usedForMatching: true,
     title: "いまの学年を教えてください",
     help: "学年によって、申し込める時期が変わります。",
     options: [
@@ -39,6 +50,8 @@ const QUESTIONS = [
   },
   {
     key: "schoolType",
+    purpose: "志望校独自の支援の確認順と、行動計画（志望校サイトを見る）、私立を選んだ人向けのヒント",
+    usedForMatching: true,
     title: "進学先はどう考えていますか",
     help: "まだ決まっていなくて大丈夫です。",
     options: [
@@ -50,6 +63,8 @@ const QUESTIONS = [
   },
   {
     key: "living",
+    purpose: "ヒントのみ（一人暮らしは生活費もかかる）。制度の公式条件と結びつかないため、制度の確認順には使わない",
+    usedForMatching: false,
     title: "進学したら、どこから通う予定ですか",
     help: "必要なお金の大きさが変わります。",
     options: [
@@ -60,6 +75,8 @@ const QUESTIONS = [
   },
   {
     key: "familySupport",
+    purpose: "制度の確認順（もっとも影響が大きい）と、行動計画（家の人と話す）、ヒント",
+    usedForMatching: true,
     title: "学費を家の人に出してもらえそうですか",
     help: "正確でなくて大丈夫です。いまの感覚で選んでください。",
     options: [
@@ -71,6 +88,8 @@ const QUESTIONS = [
   },
   {
     key: "researched",
+    purpose: "行動計画のみ（給付型と貸与型のちがいを知る）。制度の公式条件と結びつかないため、制度の確認順には使わない",
+    usedForMatching: false,
     title: "奨学金について、いまどのくらい調べていますか",
     help: "調べていなくても、ここから始められます。",
     options: [
@@ -81,6 +100,8 @@ const QUESTIONS = [
   },
   {
     key: "careBackground",
+    purpose: "施設経験者向けの支援の確認順と、明確に対象外かどうかの判定、行動計画（施設の職員に相談する）",
+    usedForMatching: true,
     title: "児童養護施設や里親家庭で暮らした経験はありますか",
     help:
       "その場合に使える専用の支援があるので聞いています。答えたくないときは「答えない」を選んでください。結果はどちらでも表示されます。",
@@ -203,7 +224,7 @@ const CSS = `
 }
 .sn-shell { max-width: 30rem; margin: 0 auto; padding: 1.25rem 1.125rem 3rem; }
 .sn-root * { box-sizing: border-box; }
-.sn-root p, .sn-root h1, .sn-root h2, .sn-root h3, .sn-root ul, .sn-root li { margin: 0; }
+.sn-root p, .sn-root h1, .sn-root h2, .sn-root h3, .sn-root h4, .sn-root ul, .sn-root li { margin: 0; }
 .sn-root ul { padding: 0; list-style: none; }
 
 .sn-brand { display: flex; align-items: baseline; gap: .5rem; margin-bottom: 1.75rem; }
@@ -288,6 +309,29 @@ const CSS = `
 .sn-section-title { font-size: 1.25rem; font-weight: 700; line-height: 1.5; }
 .sn-section-note { font-size: .875rem; color: var(--ink-soft); margin-top: .375rem; }
 
+.sn-group { margin-bottom: 1.5rem; }
+.sn-group-head { margin-bottom: .75rem; }
+.sn-group-title { font-size: 1.0625rem; font-weight: 700; line-height: 1.5; }
+.sn-group-note { font-size: .8125rem; color: var(--ink-soft); margin-top: .25rem; }
+
+.sn-more {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 1rem; margin-bottom: .875rem;
+}
+.sn-more > summary {
+  cursor: pointer; list-style: none; padding: 1rem 1.125rem;
+  font-size: .9375rem; font-weight: 600; color: var(--ink);
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+}
+.sn-more > summary::-webkit-details-marker { display: none; }
+.sn-more > summary:hover { background: #f6faf8; border-radius: 1rem; }
+.sn-more > summary:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.sn-more-title { font-size: .9375rem; font-weight: 600; }
+.sn-more-mark { flex: 0 0 auto; font-size: .8125rem; color: var(--primary); font-weight: 700; }
+.sn-more[open] > summary { border-bottom: 1px solid var(--line); border-radius: 1rem 1rem 0 0; }
+.sn-more-body { padding: 1rem 1.125rem .25rem; }
+.sn-more-note { font-size: .8125rem; color: var(--ink-soft); margin-bottom: .875rem; }
+
 .sn-card {
   background: var(--surface); border: 1px solid var(--line);
   border-radius: 1rem; padding: 1.125rem; margin-bottom: .875rem;
@@ -306,6 +350,9 @@ const CSS = `
   content: ""; position: absolute; left: 0; top: .6875rem;
   width: .375rem; height: .375rem; border-radius: 50%; background: var(--primary);
 }
+/* 回答と結びついた理由は、印の色を変えて見分けられるようにする */
+.sn-why .sn-why-linked li::before { background: var(--sun); }
+.sn-why .sn-why-linked { margin-bottom: .25rem; }
 .sn-official { border-top: 1px dashed var(--line); padding-top: .8125rem; }
 .sn-official-text { font-size: .8125rem; color: var(--ink-soft); margin-bottom: .5rem; }
 .sn-official-link {
@@ -337,7 +384,7 @@ const CSS = `
   background: var(--primary); color: #fff; border-radius: 1rem;
   padding: 1.375rem 1.25rem; margin-top: 2rem;
 }
-.sn-closing-title { font-size: 1.125rem; font-weight: 700; margin-bottom: .625rem; }
+.sn-closing .sn-closing-title { font-size: 1.125rem; font-weight: 700; margin-bottom: .625rem; }
 .sn-closing p { font-size: .875rem; opacity: .92; margin-bottom: .875rem; }
 .sn-closing li {
   font-size: .875rem; padding: .5rem 0; border-top: 1px solid rgba(255,255,255,.22);
@@ -371,15 +418,12 @@ const CATEGORY_NOTE = {
    判定のロジック
    ============================================================ */
 
-export function matchPrograms(answers) {
-  return SHIENDATA.filter((program) => {
-    const conditions = program.matching || {};
-    return Object.keys(conditions).every((key) => {
-      const allowed = conditions[key];
-      if (!allowed || allowed.length === 0) return true;
-      return allowed.includes(answers[key]);
-    });
-  });
+/**
+ * 回答から制度を3つのグループに分けます。
+ * 分け方の中身は src/lib/matching.js にあります。
+ */
+export function classifyForAnswers(answers) {
+  return 制度を分類する(answers, SHIENDATA);
 }
 
 function buildActions(answers) {
@@ -416,11 +460,11 @@ function Intro({ onStart }) {
   return (
     <div>
       <p className="sn-hero-lead">大学進学とお金のこと</p>
-      <h1 className="sn-hero-title">
+      <h2 className="sn-hero-title">
         <span className="sn-hero-underline">知らなかった</span>
         <br />
         で、あきらめないために。
-      </h1>
+      </h2>
       <p className="sn-hero-body">
         かんたんな質問に答えると、確認してみるとよい支援制度と、今日からできることを整理します。3分ほどで終わります。
       </p>
@@ -514,7 +558,7 @@ function Question({ index, total, question, current, onAnswer, onBack }) {
   );
 }
 
-function ProgramCard({ program }) {
+function ProgramCard({ program, answerReasons = [] }) {
   const tagStyle = CATEGORY_STYLE[program.type] || CATEGORY_STYLE["その他"];
   return (
     <article className="sn-card">
@@ -528,11 +572,18 @@ function ProgramCard({ program }) {
         )}
       </div>
 
-      <h3 className="sn-card-name">{program.name}</h3>
+      <h4 className="sn-card-name">{program.name}</h4>
       <p className="sn-card-summary">{program.summary}</p>
 
       <div className="sn-why">
         <div className="sn-why-head">確認するとよい理由</div>
+        {answerReasons.length > 0 && (
+          <ul className="sn-why-linked">
+            {answerReasons.map((reason, i) => (
+              <li key={`linked-${i}`}>{reason}</li>
+            ))}
+          </ul>
+        )}
         <ul>
           {program.whyCheck.map((reason, i) => (
             <li key={i}>{reason}</li>
@@ -557,10 +608,38 @@ function ProgramCard({ program }) {
   );
 }
 
+/** 制度カードのかたまりを1グループぶん表示する */
+function ProgramGroup({ title, note, items }) {
+  if (items.length === 0) return null;
+  return (
+    <section className="sn-group">
+      <div className="sn-group-head">
+        <h3 className="sn-group-title">{title}</h3>
+        <p className="sn-group-note">{note}</p>
+      </div>
+      {items.map((item) => (
+        <ProgramCard
+          key={item.制度.id}
+          program={item.制度}
+          answerReasons={item.回答にもとづく理由}
+        />
+      ))}
+    </section>
+  );
+}
+
 function Result({ answers, onRestart }) {
-  const programs = useMemo(() => matchPrograms(answers), [answers]);
+  const groups = useMemo(() => classifyForAnswers(answers), [answers]);
   const actions = useMemo(() => buildActions(answers), [answers]);
   const hints = useMemo(() => buildHints(answers), [answers]);
+
+  const 優先 = groups.特に確認したほうがよい;
+  const 価値あり = groups.確認する価値がある;
+  const 知っておく = groups.知っておくとよい;
+  const 表示件数 = 優先.length + 価値あり.length + 知っておく.length;
+
+  // 上の2グループが空のときは、残りを最初から開いておく
+  const 最初から開く = 優先.length === 0 && 価値あり.length === 0;
 
   return (
     <div>
@@ -568,7 +647,7 @@ function Result({ answers, onRestart }) {
         <span className="sn-step-mark">STEP 2</span>
         <h2 className="sn-section-title">確認してみるとよい支援</h2>
         <p className="sn-section-note">
-          あなたの答えから、{programs.length}件が見つかりました。これは「受けられる」という意味ではなく、「調べてみる価値がある」という意味です。
+          あなたの答えから、{表示件数}件が見つかりました。これは「受けられる」という意味ではなく、「調べてみる価値がある」という意味です。確認する順番の目安として並べています。
         </p>
       </div>
 
@@ -578,7 +657,7 @@ function Result({ answers, onRestart }) {
         </div>
       ))}
 
-      {programs.length === 0 ? (
+      {表示件数 === 0 ? (
         <div className="sn-card">
           <h3 className="sn-card-name">まずは学校の先生に聞いてみましょう</h3>
           <p className="sn-card-summary">
@@ -586,9 +665,44 @@ function Result({ answers, onRestart }) {
           </p>
         </div>
       ) : (
-        programs.map((program) => (
-          <ProgramCard key={program.id} program={program} />
-        ))
+        <>
+          <ProgramGroup
+            title="特に確認したほうがよい制度"
+            note="あなたの答えと関係の深い内容があったものです。まずここから見てみてください。"
+            items={優先}
+          />
+
+          <ProgramGroup
+            title="確認する価値がある制度"
+            note="あなたの答えとつながる点があったものです。"
+            items={価値あり}
+          />
+
+          {知っておく.length > 0 && (
+            <details className="sn-more" open={最初から開く}>
+              <summary>
+                <span className="sn-more-title">
+                  ほかにも確認できる制度があります（{知っておく.length}件）
+                </span>
+                <span className="sn-more-mark" aria-hidden="true">
+                  ひらく
+                </span>
+              </summary>
+              <div className="sn-more-body">
+                <p className="sn-more-note">
+                  今回の答えからは、あなたとのつながりを判断できませんでした。対象外という意味ではないので、気になるものがあれば確認してみてください。
+                </p>
+                {知っておく.map((item) => (
+                  <ProgramCard
+                    key={item.制度.id}
+                    program={item.制度}
+                    answerReasons={item.回答にもとづく理由}
+                  />
+                ))}
+              </div>
+            </details>
+          )}
+        </>
       )}
 
       <div className="sn-section-head">
@@ -610,7 +724,7 @@ function Result({ answers, onRestart }) {
       ))}
 
       <div className="sn-closing">
-        <div className="sn-closing-title">一人で判断する必要はありません</div>
+        <h2 className="sn-closing-title">一人で判断する必要はありません</h2>
         <p>
           奨学金は、条件が細かくて大人でも分かりにくい仕組みです。分からないまま相談するのが普通です。
         </p>
@@ -648,19 +762,74 @@ export default function ShingakuNavi() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
 
+  /* ------------------------------------------------------------
+     スマホの「戻る」ボタンへの対応
+
+     画面を進むたびに、ブラウザの履歴に1つ印を残します。
+     こうすると、戻るボタンで1つ前の質問に戻れるようになり、
+     いきなりアプリの外へ出てしまうことがなくなります。
+
+     回答の内容は React が持っているので、戻っても消えません。
+     ライブラリは使わず、ブラウザに元からある機能だけで動きます。
+     ------------------------------------------------------------ */
+
+  /** 画面を進めて、履歴に印を残す */
+  const 進む = useCallback((次の画面, 次の質問番号) => {
+    setPhase(次の画面);
+    setStep(次の質問番号);
+    if (typeof window !== "undefined" && window.history) {
+      window.history.pushState(
+        { shingakuNavi: { phase: 次の画面, step: 次の質問番号 } },
+        ""
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.history) return;
+
+    // 最初の画面を履歴に記録しておく
+    window.history.replaceState(
+      { shingakuNavi: { phase: "intro", step: 0 } },
+      ""
+    );
+
+    const 戻るときの処理 = (できごと) => {
+      const 記録 = できごと.state?.shingakuNavi;
+      if (記録) {
+        setPhase(記録.phase);
+        setStep(記録.step);
+      } else {
+        setPhase("intro");
+        setStep(0);
+      }
+    };
+
+    window.addEventListener("popstate", 戻るときの処理);
+    return () => window.removeEventListener("popstate", 戻るときの処理);
+  }, []);
+
   const handleAnswer = (key, value) => {
     setAnswers((prev) => ({ ...prev, [key]: value }));
     if (step < QUESTIONS.length - 1) {
-      setStep(step + 1);
+      進む("questions", step + 1);
     } else {
-      setPhase("result");
+      進む("result", step);
+    }
+  };
+
+  // 画面の「前の質問にもどる」も、ブラウザの戻ると同じ動きにする
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history) {
+      window.history.back();
+    } else {
+      setStep((前) => Math.max(0, 前 - 1));
     }
   };
 
   const handleRestart = () => {
     setAnswers({});
-    setStep(0);
-    setPhase("intro");
+    進む("intro", 0);
   };
 
   return (
@@ -668,11 +837,11 @@ export default function ShingakuNavi() {
       <style>{CSS}</style>
       <div className="sn-shell">
         <div className="sn-brand">
-          <span className="sn-brand-name">進学支援ナビ</span>
-          <span className="sn-brand-ver">Ver.0</span>
+          <h1 className="sn-brand-name">進学支援ナビ</h1>
+          <span className="sn-brand-ver">Ver.1</span>
         </div>
 
-        {phase === "intro" && <Intro onStart={() => setPhase("questions")} />}
+        {phase === "intro" && <Intro onStart={() => 進む("questions", 0)} />}
 
         {phase === "questions" && (
           <Question
@@ -681,7 +850,7 @@ export default function ShingakuNavi() {
             question={QUESTIONS[step]}
             current={answers[QUESTIONS[step].key]}
             onAnswer={handleAnswer}
-            onBack={() => setStep(Math.max(0, step - 1))}
+            onBack={handleBack}
           />
         )}
 

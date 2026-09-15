@@ -21,6 +21,13 @@
   "notes": null,
   "status": "draft",
   "matching": {
-    "careBackground": ["yes"]
+    "excludeIf": { "careBackground": ["no"] },
+    "signals": [
+      {
+        "when": { "careBackground": ["yes"] },
+        "reason": "施設や里親家庭で暮らした経験があると答えたため、専用の支援があるかどうかを確認する価値があります。",
+        "strength": "strong"
+      }
+    ]
   }
 }

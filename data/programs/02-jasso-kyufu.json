@@ -20,6 +20,18 @@
   "notes": null,
   "status": "draft",
   "matching": {
-    "familySupport": ["difficult", "partial", "unknown"]
+    "excludeIf": {},
+    "signals": [
+      {
+        "when": { "familySupport": ["difficult", "partial", "unknown"] },
+        "reason": "学費を家の人に出してもらうのが難しい、または分からないと答えたため、返さなくてよい支援として確認する価値があります。",
+        "strength": "strong"
+      },
+      {
+        "when": { "grade": ["hs1", "hs2", "hs3"] },
+        "reason": "高校在学中に申し込む方法があるため、在学中のいまのうちに申し込み時期を確認しておけます。",
+        "strength": "normal"
+      }
+    ]
   }
 }
