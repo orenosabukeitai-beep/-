@@ -860,3 +860,134 @@ describe("JASSO 貸与奨学金のカード", () => {
     expect(カード.textContent).not.toMatch(/\d{1,2}月\d{1,2}日(まで|締切)/);
   });
 });
+
+describe("案内（guide）の画面表示", () => {
+  /** 案内セクションのカードを名前で取り出す */
+  function 案内カード(名前) {
+    return [...document.querySelectorAll(".sn-guide-group article")].find((要素) =>
+      要素.textContent.includes(名前)
+    );
+  }
+
+  it("4件の案内が表示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 名前 = [...document.querySelectorAll(".sn-guide-group h4")].map(
+      (h) => h.textContent
+    );
+    expect(名前).toEqual([
+      "志望校独自の支援を確認する",
+      "住んでいる自治体の支援を確認する",
+      "民間団体・財団の奨学金を確認する",
+      "施設等で暮らした経験のある人向けの支援を相談する",
+    ]);
+  });
+
+  it("【重要】案内に「確認のしかた」が番号つきで表示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    for (const 名前 of [
+      "志望校独自の支援を確認する",
+      "住んでいる自治体の支援を確認する",
+      "民間団体・財団の奨学金を確認する",
+      "施設等で暮らした経験のある人向けの支援を相談する",
+    ]) {
+      const カード = 案内カード(名前);
+      expect(カード.textContent).toContain("確認のしかた");
+      expect(カード.querySelectorAll(".sn-steps li")).toHaveLength(3);
+    }
+  });
+
+  it("JASSOの検索ページへのリンクが表示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    for (const 名前 of [
+      "志望校独自の支援を確認する",
+      "住んでいる自治体の支援を確認する",
+      "民間団体・財団の奨学金を確認する",
+    ]) {
+      const リンク = 案内カード(名前).querySelector("a");
+      expect(リンク.getAttribute("href")).toBe(
+        "https://www.jasso.go.jp/shogakukin/dantaiseido/"
+      );
+      expect(リンク.textContent).toBe("探し方を見る");
+    }
+  });
+
+  it("【重要】案内は「確認先の案内」と表示され、制度の分類が付かない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    for (const カード of document.querySelectorAll(".sn-guide-group article")) {
+      expect(カード.textContent).toContain("確認先の案内");
+      expect(カード.querySelector(".sn-tag-sample")).toBeNull();
+      expect(カード.textContent).not.toMatch(/給付型・|貸与型・|減免・/);
+    }
+  });
+
+  it("【重要】「必ず制度がある」と読める表示になっていない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 案内の文 = document.querySelector(".sn-guide-group").textContent;
+    for (const 断定 of ["必ずあります", "必ず存在します", "全員が使えます"]) {
+      expect(案内の文).not.toContain(断定);
+    }
+  });
+
+  it("施設経験者向けの案内に、判定しないことが書かれている", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const カード = 案内カード("施設等で暮らした経験のある人向けの支援を相談する");
+    expect(カード.textContent).toMatch(/決めるものではありません/);
+    expect(カード.textContent).not.toMatch(/あなたは利用できます/);
+  });
+
+  it("【重要】施設の質問をとばしても、案内が消えない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンC);
+
+    expect(
+      案内カード("施設等で暮らした経験のある人向けの支援を相談する")
+    ).toBeTruthy();
+    expect(document.querySelectorAll(".sn-guide-group article")).toHaveLength(4);
+  });
+
+  it("施設経験が「ない」と答えたときだけ、その案内が消える", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンB);
+
+    expect(
+      案内カード("施設等で暮らした経験のある人向けの支援を相談する")
+    ).toBeUndefined();
+    expect(document.querySelectorAll(".sn-guide-group article")).toHaveLength(3);
+  });
+
+  it("【重要】制度と案内が混ざらない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 制度側 = [
+      ...グループの制度名("特に確認したほうがよい制度"),
+      ...グループの制度名("確認する価値がある制度"),
+      ...折りたたみの中の制度名(),
+    ];
+    const 案内側 = [...document.querySelectorAll(".sn-guide-group h4")].map(
+      (h) => h.textContent
+    );
+
+    // 同じものが両方に出ていない
+    for (const 名前 of 案内側) {
+      expect(制度側).not.toContain(名前);
+    }
+    // 制度側には program だけが並んでいる
+    expect(制度側).toEqual([
+      "高等教育の修学支援新制度",
+      "JASSO 貸与奨学金（第一種・第二種）",
+    ]);
+  });
+});

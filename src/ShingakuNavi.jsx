@@ -383,6 +383,18 @@ const CSS = `
 /* 回答と結びついた理由は、印の色を変えて見分けられるようにする */
 .sn-why .sn-why-linked li::before { background: var(--sun); }
 .sn-why .sn-why-linked { margin-bottom: .25rem; }
+.sn-steps { margin-bottom: .875rem; }
+.sn-steps-head { font-size: .8125rem; font-weight: 700; margin-bottom: .5rem; }
+.sn-steps ol { display: grid; gap: .4375rem; }
+.sn-steps li { display: flex; gap: .625rem; align-items: flex-start; }
+.sn-step-num {
+  flex: 0 0 1.375rem; height: 1.375rem; border-radius: .4375rem;
+  background: var(--primary-soft); color: var(--primary);
+  font-size: .75rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; margin-top: .1875rem;
+}
+.sn-step-text { font-size: .875rem; color: #3d5760; line-height: 1.7; }
+
 .sn-official { border-top: 1px dashed var(--line); padding-top: .8125rem; }
 .sn-official-text { font-size: .8125rem; color: var(--ink-soft); margin-bottom: .5rem; }
 .sn-official-link {
@@ -659,6 +671,20 @@ function ProgramCard({ program, answerReasons = [] }) {
           ))}
         </ul>
       </div>
+
+      {program.nextSteps?.length > 0 && (
+        <div className="sn-steps">
+          <div className="sn-steps-head">確認のしかた</div>
+          <ol>
+            {program.nextSteps.map((手順, i) => (
+              <li key={i}>
+                <span className="sn-step-num">{i + 1}</span>
+                <span className="sn-step-text">{手順}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       <div className="sn-official">
         <p className="sn-official-text">{program.officialText}</p>

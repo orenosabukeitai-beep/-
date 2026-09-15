@@ -2,44 +2,54 @@
   "recordType": "guide",
   "id": "care-leaver",
   "name": "施設等で暮らした経験のある人向けの支援を相談する",
-  "aliases": [],
+  "aliases": ["自立支援資金貸付", "児童養護施設退所者等自立支援資金貸付"],
   "replaces": [],
-  "provider": "国・自治体・民間の団体",
+  "provider": "国・都道府県・実施機関など",
   "type": null,
   "variants": null,
   "educationStage": null,
-  "summary": "施設や里親家庭で暮らした（暮らしている）人が進学するときに使える支援があります。国・自治体・民間の団体がそれぞれ行っているため、まず相談先に聞くのが近道です。",
+  "summary": "児童養護施設等で暮らした経験がある人を対象とする進学・生活の支援制度が設けられている場合があります。対象になる条件や申請の窓口は確認が必要なので、まず相談先に聞くのが近道です。",
   "whyCheck": [
-    "一般の奨学金とは別に、専用の支援が用意されていることがあります。",
-    "住む場所や生活費まで含めて相談できる先があります。",
+    "こども家庭庁の資料に、児童養護施設退所者等に対する自立支援資金の貸付についての仕組みが示されています。",
+    "大学等への進学者について、一定の条件のもとで生活支援費や家賃支援費などの仕組みが設けられています。",
     "施設の職員や自治体の担当者が、手続きを一緒に進めてくれる場合があります。"
   ],
-  "cautions": [],
+  "cautions": [
+    "この案内は、支援を受けられるかどうかを決めるものではありません。対象になる条件や申請の窓口は、実施している機関で確認してください。"
+  ],
+  "nextSteps": [
+    "いま生活している施設、または以前生活していた施設の職員に相談する",
+    "都道府県などの相談窓口・実施機関を確認する",
+    "対象になる条件や申請の方法を、実施機関で確認する"
+  ],
   "mainConditions": null,
   "incomeConditions": null,
   "otherConditions": null,
   "supportContent": null,
   "applicationPeriod": null,
   "officialUrl": null,
-  "officialText": "施設の職員や、自治体の児童福祉の窓口に「進学したい」と伝えて、使える支援を教えてもらってください。",
-  "sources": [],
-  "checkedAt": null,
-  "notes": null,
-  "status": "draft",
+  "officialText": "施設の職員や、都道府県などの相談窓口に「進学したい」と伝えて、使える支援を教えてもらってください。対象になる条件や申請の方法は、実施している機関で確認してください。",
+  "sources": [
+    {
+      "title": "児童養護施設退所者等に対する自立支援資金の貸付（こども家庭庁）",
+      "url": "https://www.cfa.go.jp/assets/contents/node/basic_page/field_ref_resources/40ecef9f-f018-4913-9ee7-ffa98da27c89/40f29688/20250716_policies_jidougyakutai_sogoshienjigyo_70.pdf",
+      "checkedAt": "2026-09-16",
+      "note": "大学等への進学者について、一定の条件のもとで生活支援費・家賃支援費等の仕組みが設けられていること"
+    }
+  ],
+  "checkedAt": "2026-09-16",
+  "notes": "国・都道府県・実施機関にまたがる仕組みのため、案内（guide）として扱っています。制度を program 化していないのは、対象条件と申請窓口の確認が必要で、このアプリから受給資格を判定してはいけないためです。公式資料がPDFのため、利用者に見せるリンク（officialUrl）は置かず、相談先への案内にとどめています。",
+  "status": "checked",
   "matching": {
     "excludeIf": {
-      "careBackground": [
-        "no"
-      ]
+      "careBackground": ["no"]
     },
     "signals": [
       {
         "when": {
-          "careBackground": [
-            "yes"
-          ]
+          "careBackground": ["yes"]
         },
-        "reason": "施設や里親家庭で暮らした経験があると答えたため、専用の支援があるかどうかを確認する価値があります。",
+        "reason": "施設や里親家庭で暮らした経験があると答えたためです。専用の支援が設けられている場合があるので、相談先に聞いてみる価値があります。",
         "strength": "strong"
       }
     ]

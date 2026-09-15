@@ -2,41 +2,47 @@
   "recordType": "guide",
   "id": "school-genmen",
   "name": "志望校独自の支援を確認する",
-  "aliases": [],
+  "aliases": ["学内奨学金", "授業料減免", "授業料等の徴収猶予"],
   "replaces": [],
-  "provider": "大学・専門学校",
+  "provider": "大学・短期大学など",
   "type": null,
   "variants": null,
   "educationStage": null,
-  "summary": "学校が自分で用意している授業料の減免や、成績などで選ばれる制度です。学校によって名前も内容もちがうため、志望校のサイトで確認します。",
+  "summary": "進学を考えている学校には、学校独自の奨学金や授業料の減免などがある場合があります。学校によって内容がちがうので、志望校ごとに確認します。",
   "whyCheck": [
-    "国の制度とは別に申し込めることがあり、見落とされやすい支援です。",
-    "志望校を選ぶときの判断材料になります。"
+    "日本学生支援機構（JASSO）の検索ページで、国内の大学・短期大学が行う学内奨学金、授業料等の減免、授業料等の徴収猶予などを調べられます。",
+    "学校ごとに内容がちがうため、志望校が決まっているほど調べやすくなります。"
   ],
   "cautions": [],
+  "nextSteps": [
+    "JASSOの検索ページで、志望校の名前を検索してみる",
+    "志望校の公式サイトで「奨学金」「学生生活」「学費」などのページを見る",
+    "分からないときは、志望校の奨学金・学生支援の担当に問い合わせる"
+  ],
   "mainConditions": null,
   "incomeConditions": null,
   "otherConditions": null,
   "supportContent": null,
   "applicationPeriod": null,
-  "officialUrl": null,
-  "officialText": "志望校の公式サイトで「学費」「奨学金」「授業料減免」のページを見てください。分からないときは、その学校の入試広報や学生課に聞けます。",
-  "sources": [],
-  "checkedAt": null,
-  "notes": null,
-  "status": "draft",
+  "officialUrl": "https://www.jasso.go.jp/shogakukin/dantaiseido/",
+  "officialText": "JASSOの「大学・地方公共団体等が行う奨学金制度」のページで、志望校の名前から探せます。見つからないときや内容が分からないときは、志望校の奨学金・学生支援の担当に聞いてください。",
+  "sources": [
+    {
+      "title": "大学・地方公共団体等が行う奨学金制度（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/dantaiseido/",
+      "checkedAt": "2026-09-16",
+      "note": "国内の大学・短期大学が行う学内奨学金、授業料等の減免、授業料等の徴収猶予を検索できること"
+    }
+  ],
+  "checkedAt": "2026-09-16",
+  "notes": "特定の1つの制度ではなく、学校ごとに内容が変わるため案内（guide）として扱っています。個別の学校の制度は追加していません。",
+  "status": "checked",
   "matching": {
     "excludeIf": {},
     "signals": [
       {
-        "when": {
-          "schoolType": [
-            "national",
-            "private",
-            "both"
-          ]
-        },
-        "reason": "進学先の方向を考えていると答えたため、志望校のサイトで学費と支援をあわせて確認できます。",
+        "when": { "schoolType": ["national", "private", "both"] },
+        "reason": "進学先の方向を考えていると答えたためです。志望校が決まっているほど、学校独自の支援を調べやすくなります。",
         "strength": "normal"
       }
     ]

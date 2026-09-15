@@ -2,29 +2,41 @@
   "recordType": "guide",
   "id": "local-gov",
   "name": "住んでいる自治体の支援を確認する",
-  "aliases": [],
+  "aliases": ["地方公共団体の奨学金", "自治体奨学金"],
   "replaces": [],
-  "provider": "都道府県・市区町村",
+  "provider": "都道府県・市区町村など",
   "type": null,
   "variants": null,
   "educationStage": null,
-  "summary": "都道府県や市区町村が、その地域に住む人向けに行っている支援です。地域によってあるものとないものがあるため、住んでいる自治体で確認します。",
+  "summary": "住んでいる地域や出身地などに応じた支援がある場合があります。都道府県や市区町村などが行っているもので、地域によって内容がちがいます。",
   "whyCheck": [
-    "地域限定のため、応募する人が少ない場合があります。",
-    "国の制度と一緒に使えることがあります。"
+    "日本学生支援機構（JASSO）の検索ページで、都道府県・市区町村などが行う奨学金制度を地域から調べられます。",
+    "制度によっては、いま住んでいる地域だけでなく、進学先の所在地、出身地、保護者が住んでいる地域などが条件になる場合があります。"
   ],
   "cautions": [],
+  "nextSteps": [
+    "JASSOの検索ページで、地域を選んで探してみる",
+    "いま住んでいる地域だけでなく、必要に応じて出身地なども確認する",
+    "詳しい内容は、その自治体の公式ページか窓口で確認する"
+  ],
   "mainConditions": null,
   "incomeConditions": null,
   "otherConditions": null,
   "supportContent": null,
   "applicationPeriod": null,
-  "officialUrl": null,
-  "officialText": "住んでいる市区町村・都道府県の公式サイトを見るか、役所の窓口に聞いてください。市区町村の名前と「奨学金」で検索すると見つかることがあります。",
-  "sources": [],
-  "checkedAt": null,
-  "notes": null,
-  "status": "draft",
+  "officialUrl": "https://www.jasso.go.jp/shogakukin/dantaiseido/",
+  "officialText": "JASSOの「大学・地方公共団体等が行う奨学金制度」のページで、地域から探せます。詳しい条件や申し込み方法は、その自治体の公式ページか窓口で確認してください。",
+  "sources": [
+    {
+      "title": "大学・地方公共団体等が行う奨学金制度（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/dantaiseido/",
+      "checkedAt": "2026-09-16",
+      "note": "都道府県・市区町村等が行う奨学金制度を地域から検索できること"
+    }
+  ],
+  "checkedAt": "2026-09-16",
+  "notes": "このアプリでは都道府県を質問していないため、特定の自治体の制度を自動で判定・表示することはしていません。個別の自治体の制度も追加していません。",
+  "status": "checked",
   "matching": {
     "excludeIf": {},
     "signals": []

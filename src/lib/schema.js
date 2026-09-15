@@ -65,6 +65,7 @@ export const すべての項目 = [
   "summary",
   "whyCheck",
   "cautions",
+  "nextSteps",
   "mainConditions",
   "incomeConditions",
   "otherConditions",
@@ -152,9 +153,22 @@ function 種類と状態を調べる(制度) {
 function 一覧の項目を調べる(制度) {
   const 問題 = [];
 
-  for (const 項目 of ["whyCheck", "aliases", "replaces", "sources", "cautions"]) {
+  for (const 項目 of [
+    "whyCheck",
+    "aliases",
+    "replaces",
+    "sources",
+    "cautions",
+    "nextSteps",
+  ]) {
     if (制度[項目] !== undefined && !Array.isArray(制度[項目])) {
       問題.push(`「${項目}」は [ ] で囲んだ一覧にしてください。`);
+    }
+  }
+
+  for (const 手順 of 制度.nextSteps || []) {
+    if (typeof 手順 !== "string" || 手順 === "") {
+      問題.push("「nextSteps」には、やることを1つずつ文章で書いてください。");
     }
   }
 
@@ -283,6 +297,30 @@ function sourcesを調べる(制度) {
 
     if (制度.officialUrl === null) {
       問題.push("verified の制度には「officialUrl」が必要です。");
+    }
+  }
+
+  // 確認済みの案内（guide）は、制度の内容ではなく
+  // 「この確認先・探し方が妥当である」ことの根拠を残す
+  if (制度.recordType === "guide" && 制度.status === "checked") {
+    if (sources.length === 0) {
+      問題.push(
+        "checked の案内には「sources」が1件以上必要です。" +
+          "どの公式ページを見て、この確認先を案内しているのかを残してください。"
+      );
+    }
+
+    if (制度.officialUrl !== null && !sources.map((s) => s.url).includes(制度.officialUrl)) {
+      問題.push(
+        "「officialUrl」は、sources に入っているURLのどれかと同じにしてください。"
+      );
+    }
+
+    if (制度.nextSteps.length === 0) {
+      問題.push(
+        "checked の案内には「nextSteps」が必要です。" +
+          "どこを確認すればよいかが分からないと、案内になりません。"
+      );
     }
   }
 

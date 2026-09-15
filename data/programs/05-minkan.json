@@ -2,51 +2,56 @@
   "recordType": "guide",
   "id": "minkan",
   "name": "民間団体・財団の奨学金を確認する",
-  "aliases": [],
+  "aliases": ["民間奨学金", "財団の奨学金", "公益法人の奨学金"],
   "replaces": [],
-  "provider": "民間の団体・財団",
+  "provider": "公益法人・奨学金事業を行う団体など",
   "type": null,
   "variants": null,
   "educationStage": null,
-  "summary": "会社や財団が行っている奨学金です。返さなくてよいものが多く、応募したい理由を書いて申し込む形式がよくあります。団体ごとに内容も時期もちがいます。",
+  "summary": "大学や国の制度以外にも、財団などが行う奨学金があります。団体ごとに対象になる人も内容もちがうため、条件を一つずつ確認します。",
   "whyCheck": [
-    "返さなくてよいものが多く、国の制度と重ねて使える場合があります。",
-    "募集の時期が団体ごとにばらばらなので、早めに知っておくと間に合います。"
+    "日本学生支援機構（JASSO）の検索ページには、公益法人やその他の奨学金事業を行う団体の制度情報も載っています。",
+    "団体ごとに対象になる人や募集の時期がちがうため、公式の募集要項で一つずつ確認する必要があります。"
   ],
   "cautions": [],
+  "nextSteps": [
+    "JASSOの検索ページで、条件を設定して探してみる",
+    "気になる制度が見つかったら、その団体の公式の募集要項を見る",
+    "対象になる条件、締切、ほかの奨学金と一緒に使えるかどうかを、公式の募集要項で確認する"
+  ],
   "mainConditions": null,
   "incomeConditions": null,
   "otherConditions": null,
   "supportContent": null,
   "applicationPeriod": null,
-  "officialUrl": null,
-  "officialText": "高校の進路担当の先生に、学校に届いている募集がないか聞いてみてください。学校を通して応募するものが多くあります。",
-  "sources": [],
-  "checkedAt": null,
-  "notes": null,
-  "status": "draft",
+  "officialUrl": "https://www.jasso.go.jp/shogakukin/dantaiseido/",
+  "officialText": "JASSOの「大学・地方公共団体等が行う奨学金制度」のページで探せます。気になる制度を見つけたら、必ずその団体の公式の募集要項で、対象になる条件と締切を確認してください。",
+  "sources": [
+    {
+      "title": "大学・地方公共団体等が行う奨学金制度（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/dantaiseido/",
+      "checkedAt": "2026-09-16",
+      "note": "公益法人・その他の奨学金事業実施団体等の制度情報も掲載されていること"
+    }
+  ],
+  "checkedAt": "2026-09-16",
+  "notes": "団体ごとに内容が変わるため案内（guide）として扱っています。個別の財団の制度は追加していません。受かりやすさ、給付型の多さ、ほかの奨学金と併用できるかどうかは、公式情報から一般化できないため書いていません。",
+  "status": "checked",
   "matching": {
     "excludeIf": {},
     "signals": [
       {
         "when": {
-          "familySupport": [
-            "difficult",
-            "partial",
-            "unknown"
-          ]
+          "familySupport": ["difficult", "partial", "unknown"]
         },
-        "reason": "返さなくてよいものが多く、国の制度と重ねて使える場合があるため、あわせて確認する価値があります。",
+        "reason": "学費を家の人に出してもらうのが難しい、または分からないと答えたためです。国や学校の制度のほかにも、財団などが行う奨学金を探せます。",
         "strength": "normal"
       },
       {
         "when": {
-          "grade": [
-            "hs3",
-            "graduate"
-          ]
+          "grade": ["hs3", "graduate"]
         },
-        "reason": "進学までの時間が短いため、募集の時期を早めに確認しておくと間に合います。",
+        "reason": "進学までの時間が短いためです。団体ごとに募集の時期がちがうので、早めに探し始めると間に合います。",
         "strength": "normal"
       }
     ]

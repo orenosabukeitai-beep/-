@@ -397,3 +397,115 @@ describe("公式確認済みの制度の一覧", () => {
     }
   });
 });
+
+describe("案内（guide）4件の整備", () => {
+  const JASSO検索ページ = "https://www.jasso.go.jp/shogakukin/dantaiseido/";
+
+  it("案内は4件ある", () => {
+    expect(guideだけ.map((案内) => 案内.id).sort()).toEqual([
+      "care-leaver",
+      "local-gov",
+      "minkan",
+      "school-genmen",
+    ]);
+  });
+
+  it("【重要】4件ともすべて checked になっている", () => {
+    for (const 案内 of guideだけ) {
+      expect(案内.status, `${案内.id} が checked になっていません`).toBe("checked");
+    }
+  });
+
+  it("【重要】verified の案内は1件も存在しない", () => {
+    // 案内は特定の1つの制度ではないため、公式確認済みの制度として扱わない
+    expect(guideだけ.filter((案内) => 案内.status === "verified")).toEqual([]);
+  });
+
+  it("4件とも recordType が guide のまま（program に変わっていない）", () => {
+    for (const 案内 of guideだけ) {
+      expect(案内.recordType).toBe("guide");
+      expect(案内.type).toBeNull();
+    }
+  });
+
+  it("4件とも sources と checkedAt を持っている", () => {
+    for (const 案内 of guideだけ) {
+      expect(案内.sources.length, `${案内.id} に sources がありません`).toBeGreaterThan(0);
+      expect(案内.checkedAt).toBe("2026-09-16");
+    }
+  });
+
+  it("4件とも「次にやること」が3つ書かれている", () => {
+    for (const 案内 of guideだけ) {
+      expect(案内.nextSteps.length, `${案内.id} の nextSteps が足りません`).toBe(3);
+    }
+  });
+
+  it("【重要】JASSOの検索ページのURLが正しい", () => {
+    for (const id of ["school-genmen", "local-gov", "minkan"]) {
+      const 案内 = guideだけ.find((g) => g.id === id);
+      expect(案内.officialUrl, `${id} のリンクが違います`).toBe(JASSO検索ページ);
+      expect(案内.sources.map((s) => s.url)).toContain(JASSO検索ページ);
+    }
+  });
+
+  it("【重要】施設経験者向けの案内に、こども家庭庁の公式 source がある", () => {
+    const 施設 = guideだけ.find((g) => g.id === "care-leaver");
+    const URL一覧 = 施設.sources.map((s) => s.url);
+
+    expect(URL一覧.some((u) => u.startsWith("https://www.cfa.go.jp/"))).toBe(true);
+    expect(施設.sources[0].title).toMatch(/こども家庭庁/);
+  });
+
+  it("【重要】「必ず制度がある」と断定していない", () => {
+    for (const 案内 of guideだけ) {
+      const 全文 = [案内.summary, ...案内.whyCheck, 案内.officialText].join("");
+      for (const 断定 of ["必ずあります", "必ず存在します", "かならずあります"]) {
+        expect(全文, `${案内.id} が断定しています`).not.toContain(断定);
+      }
+      // 「〜場合があります」のような言い方になっている
+      expect(全文).toMatch(/場合があります|ちがいます|調べられます|載っています/);
+    }
+  });
+
+  it("【重要】施設経験者向けの案内に「利用できます」と書いていない", () => {
+    const 施設 = guideだけ.find((g) => g.id === "care-leaver");
+    const 全文 = JSON.stringify(施設);
+
+    for (const 禁止 of [
+      "あなたは利用できます",
+      "利用できます",
+      "受給できます",
+      "対象です",
+    ]) {
+      expect(全文, `禁止表現「${禁止}」が入っています`).not.toContain(禁止);
+    }
+    // 判定しないことを明記している
+    expect(施設.cautions.join("")).toMatch(/決めるものではありません/);
+  });
+
+  it("【重要】民間の案内に、公式情報から一般化できないことを書いていない", () => {
+    const 民間 = guideだけ.find((g) => g.id === "minkan");
+    const 表に出る文 = [民間.summary, ...民間.whyCheck, ...民間.nextSteps, 民間.officialText].join("");
+
+    for (const 一般化 of [
+      "受かりやすい",
+      "併給できます",
+      "給付型が多く",
+      "返さなくてよいものが多く",
+    ]) {
+      expect(表に出る文, `「${一般化}」は公式情報から一般化できません`).not.toContain(
+        一般化
+      );
+    }
+  });
+
+  it("特定の自治体名・財団名を勝手に追加していない", () => {
+    const 自治体 = guideだけ.find((g) => g.id === "local-gov");
+    const 民間 = guideだけ.find((g) => g.id === "minkan");
+
+    // 都道府県を質問していないので、特定の自治体を名指ししない
+    expect(JSON.stringify(自治体)).not.toMatch(/東京都|大阪府|北海道|県が行う/);
+    expect(JSON.stringify(民間)).not.toMatch(/財団法人[^・]/);
+  });
+});
