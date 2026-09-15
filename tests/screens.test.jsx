@@ -276,7 +276,7 @@ describe("任意の質問をスキップできる", () => {
     await 最後まで回答する(回答パターンC);
 
     expect(表示中の制度名()).toContain(
-      "児童養護施設等で暮らした経験のある人への進学支援"
+      "施設等で暮らした経験のある人向けの支援を相談する"
     );
   });
 });
@@ -301,7 +301,7 @@ describe("結果画面", () => {
     await 最後まで回答する(回答パターンA);
 
     expect(表示中の制度名()).toContain(
-      "児童養護施設等で暮らした経験のある人への進学支援"
+      "施設等で暮らした経験のある人向けの支援を相談する"
     );
   });
 
@@ -310,7 +310,7 @@ describe("結果画面", () => {
     await 最後まで回答する(回答パターンB);
 
     expect(表示中の制度名()).not.toContain(
-      "児童養護施設等で暮らした経験のある人への進学支援"
+      "施設等で暮らした経験のある人向けの支援を相談する"
     );
   });
 
@@ -422,7 +422,6 @@ describe("結果画面：3つのグループ分け（Ver.1）", () => {
 
     const 優先 = グループの制度名("特に確認したほうがよい制度");
     expect(優先).toContain("高等教育の修学支援新制度");
-    expect(優先).toContain("児童養護施設等で暮らした経験のある人への進学支援");
   });
 
   it("normal だけの制度が「確認する価値がある」に入る", async () => {
@@ -435,9 +434,11 @@ describe("結果画面：3つのグループ分け（Ver.1）", () => {
 
   it("シグナルの無い制度は折りたたみの中に入る", async () => {
     render(<ShingakuNavi />);
-    await 最後まで回答する(回答パターンA);
+    await 最後まで回答する(回答パターンB);
 
-    expect(折りたたみの中の制度名()).toContain("住んでいる自治体の奨学金・支援");
+    expect(折りたたみの中の制度名()).toContain(
+      "日本学生支援機構（JASSO）の貸与型奨学金"
+    );
   });
 
   it("【重要】受給の見込みを思わせる表現を使っていない", async () => {
@@ -450,21 +451,151 @@ describe("結果画面：3つのグループ分け（Ver.1）", () => {
     }
   });
 
-  it("結果画面が Ver.0 より短くなっている（最初に見える制度が減った）", async () => {
+  it("最初に見える件数が、全体より少ない（スマホで長くなりすぎない）", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンB);
+
+    // 折りたたみの中にあるぶん、最初に見える数のほうが少ない
+    expect(最初から見える制度名().length).toBeLessThan(表示中の制度名().length);
+  });
+});
+
+describe("結果画面：学校・地域・民間の支援（guide）", () => {
+  it("制度とは別のまとまりとして案内される", async () => {
     render(<ShingakuNavi />);
     await 最後まで回答する(回答パターンA);
 
-    // Ver.0 はこの回答で7件すべてを広げて表示していた
-    expect(最初から見える制度名().length).toBeLessThan(7);
-    // それでも、折りたたみを含めれば情報は減っていない
-    expect(表示中の制度名().length).toBe(7);
+    expect(
+      screen.getByRole("heading", { name: "学校・地域・民間の支援も確認する" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/学校や住んでいる地域、民間団体にも独自の支援がある場合があります/)
+    ).toBeInTheDocument();
+  });
+
+  it("案内は制度のグループに混ざらない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 制度グループ = [
+      ...グループの制度名("特に確認したほうがよい制度"),
+      ...グループの制度名("確認する価値がある制度"),
+      ...折りたたみの中の制度名(),
+    ];
+
+    for (const 名前 of [
+      "志望校独自の支援を確認する",
+      "住んでいる自治体の支援を確認する",
+      "民間団体・財団の奨学金を確認する",
+    ]) {
+      expect(制度グループ, `「${名前}」が制度の並びに混ざっています`).not.toContain(名前);
+    }
+  });
+
+  it("【重要】案内には「確認先の案内」と表示され、特定の制度に見えない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 案内セクション = document.querySelector(".sn-guide-group");
+    expect(案内セクション).not.toBeNull();
+
+    for (const カード of 案内セクション.querySelectorAll("article")) {
+      expect(カード.textContent).toContain("確認先の案内");
+      // 案内は制度データではないので、確認状態のバッジは出さない
+      expect(カード.querySelector(".sn-tag-sample")).toBeNull();
+      // 給付型・貸与型のような制度の分類も付けない
+      expect(カード.textContent).not.toMatch(/給付型・|貸与型・|減免・/);
+    }
+  });
+
+  it("案内のカード名が、行動が分かる書き方になっている", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 案内の名前 = [
+      ...document.querySelectorAll(".sn-guide-group article h4"),
+    ].map((要素) => 要素.textContent);
+
+    expect(案内の名前.length).toBeGreaterThan(0);
+    for (const 名前 of 案内の名前) {
+      expect(名前, `「${名前}」が行動の形になっていません`).toMatch(
+        /確認する$|探す$|相談する$/
+      );
+    }
+  });
+
+  it("施設経験の案内は、答えなかった人にも表示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンC);
+
+    expect(表示中の制度名()).toContain(
+      "施設等で暮らした経験のある人向けの支援を相談する"
+    );
+  });
+
+  it("施設経験が「ない」人には、その案内を出さない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンB);
+
+    expect(表示中の制度名()).not.toContain(
+      "施設等で暮らした経験のある人向けの支援を相談する"
+    );
+  });
+});
+
+describe("公式確認済みの制度（verified）の見せ方", () => {
+  it("確認済みの制度には「サンプルデータ」が付かない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const カード = [...document.querySelectorAll("article")].find((要素) =>
+      要素.textContent.includes("高等教育の修学支援新制度")
+    );
+    expect(カード.querySelector(".sn-tag-sample")).toBeNull();
+  });
+
+  it("未確認の制度には「サンプルデータ」が付く", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const カード = [...document.querySelectorAll("article")].find((要素) =>
+      要素.textContent.includes("貸与型奨学金")
+    );
+    expect(カード.querySelector(".sn-tag-sample")).not.toBeNull();
+  });
+
+  it("給付奨学金と授業料減免が1枚のカードにまとまっている", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    // 別々のカードとして二重に出さない
+    expect(表示中の制度名()).not.toContain(
+      "日本学生支援機構（JASSO）の給付型奨学金"
+    );
+
+    const カード = [...document.querySelectorAll("article")].find((要素) =>
+      要素.textContent.includes("高等教育の修学支援新制度")
+    );
+    expect(カード.textContent).toContain("給付型奨学金");
+  });
+
+  it("家計の基準を数字で判定せず、公式の確認先へ案内している", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 画面の文字 = document.body.textContent;
+    expect(画面の文字).toMatch(/進学資金シミュレーター/);
+    // 「世帯年収○○万円以下」のような数字での線引きを出さない
+    expect(画面の文字).not.toMatch(/年収\s*\d/);
   });
 });
 
 describe("結果画面：折りたたみの開閉", () => {
+  // パターンB は「確認する価値がある制度」と「知っておくとよい制度」の
+  // 両方が出るため、折りたたみの動きを確かめられる
   it("最初は閉じている", async () => {
     render(<ShingakuNavi />);
-    await 最後まで回答する(回答パターンA);
+    await 最後まで回答する(回答パターンB);
 
     const 折りたたみ = document.querySelector(".sn-more");
     expect(折りたたみ).not.toBeNull();
@@ -473,14 +604,16 @@ describe("結果画面：折りたたみの開閉", () => {
 
   it("件数つきの見出しが出ている", async () => {
     render(<ShingakuNavi />);
-    await 最後まで回答する(回答パターンA);
+    await 最後まで回答する(回答パターンB);
 
-    expect(screen.getByText(/ほかにも確認できる制度があります（\d+件）/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/ほかにも確認できる制度があります（\d+件）/)
+    ).toBeInTheDocument();
   });
 
   it("押すと開き、もう一度押すと閉じる", async () => {
     render(<ShingakuNavi />);
-    await 最後まで回答する(回答パターンA);
+    await 最後まで回答する(回答パターンB);
 
     const 折りたたみ = document.querySelector(".sn-more");
     const つまみ = 折りたたみ.querySelector("summary");
@@ -493,8 +626,8 @@ describe("結果画面：折りたたみの開閉", () => {
   });
 
   // 「上の2グループが空のときは最初から開く」動きは、
-  // いまの7制度ではどう答えても①か②に必ず1件入るため、ここでは再現できません。
-  // 制度データを差し替えられる tests/all-collapsed.test.jsx で確認しています。
+  // いまの制度データでは再現しにくいため、
+  // データを差し替えられる tests/all-collapsed.test.jsx で確認しています。
 });
 
 describe("候補になった理由が回答と連動する", () => {
@@ -541,7 +674,7 @@ describe("候補になった理由が回答と連動する", () => {
 
     expect(
       screen.getByText(
-        "家庭から学費を出してもらうのが難しい人が、最初に確認することが多い制度です。"
+        "家庭の経済状況にかかわらず進学できるようにするための、国の制度です。"
       )
     ).toBeInTheDocument();
   });

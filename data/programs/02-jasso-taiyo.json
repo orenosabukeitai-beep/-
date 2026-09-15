@@ -1,6 +1,9 @@
 {
+  "recordType": "program",
   "id": "jasso-taiyo",
   "name": "日本学生支援機構（JASSO）の貸与型奨学金",
+  "aliases": [],
+  "replaces": [],
   "provider": "国（日本学生支援機構）",
   "type": "貸与型",
   "educationStage": null,
@@ -16,6 +19,7 @@
   "applicationPeriod": null,
   "officialUrl": "https://www.jasso.go.jp/",
   "officialText": "日本学生支援機構（JASSO）のサイトで、貸与型の種類と返し方の説明を確認してください。",
+  "sources": [],
   "checkedAt": null,
   "notes": null,
   "status": "draft",

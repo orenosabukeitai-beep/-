@@ -1,0 +1,30 @@
+{
+  "recordType": "guide",
+  "id": "local-gov",
+  "name": "住んでいる自治体の支援を確認する",
+  "aliases": [],
+  "replaces": [],
+  "provider": "都道府県・市区町村",
+  "type": null,
+  "educationStage": null,
+  "summary": "都道府県や市区町村が、その地域に住む人向けに行っている支援です。地域によってあるものとないものがあるため、住んでいる自治体で確認します。",
+  "whyCheck": [
+    "地域限定のため、応募する人が少ない場合があります。",
+    "国の制度と一緒に使えることがあります。"
+  ],
+  "mainConditions": null,
+  "incomeConditions": null,
+  "otherConditions": null,
+  "supportContent": null,
+  "applicationPeriod": null,
+  "officialUrl": null,
+  "officialText": "住んでいる市区町村・都道府県の公式サイトを見るか、役所の窓口に聞いてください。市区町村の名前と「奨学金」で検索すると見つかることがあります。",
+  "sources": [],
+  "checkedAt": null,
+  "notes": null,
+  "status": "draft",
+  "matching": {
+    "excludeIf": {},
+    "signals": []
+  }
+}

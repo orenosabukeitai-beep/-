@@ -310,6 +310,7 @@ const CSS = `
 .sn-section-note { font-size: .875rem; color: var(--ink-soft); margin-top: .375rem; }
 
 .sn-group { margin-bottom: 1.5rem; }
+.sn-guide-group { border-top: 1px solid var(--line); padding-top: 1.5rem; margin-top: 1.5rem; }
 .sn-group-head { margin-bottom: .75rem; }
 .sn-group-title { font-size: 1.0625rem; font-weight: 700; line-height: 1.5; }
 .sn-group-note { font-size: .8125rem; color: var(--ink-soft); margin-top: .25rem; }
@@ -340,6 +341,7 @@ const CSS = `
 .sn-tag { font-size: .75rem; font-weight: 700; border-radius: .375rem; padding: .125rem .5rem; }
 .sn-tag-provider { background: #eef2f4; color: var(--ink-soft); font-weight: 600; }
 .sn-tag-sample { background: var(--sun-soft); color: #8a6206; }
+.sn-tag-guide { background: #eceff1; color: #46606b; }
 .sn-card-name { font-size: 1.0625rem; font-weight: 700; line-height: 1.5; margin-bottom: .5rem; }
 .sn-card-summary { font-size: .9375rem; color: #3d5760; margin-bottom: .875rem; }
 .sn-why { background: #f6faf8; border-radius: .75rem; padding: .8125rem .9375rem; margin-bottom: .875rem; }
@@ -404,6 +406,7 @@ const CATEGORY_STYLE = {
   給付型: { background: "#e3f0ec", color: "#14746a" },
   貸与型: { background: "#e7eef6", color: "#2b5f92" },
   減免: { background: "#efe9f7", color: "#5f4f96" },
+  "減免＋給付型": { background: "#e7f0ea", color: "#2f6b57" },
   その他: { background: "#eef2f4", color: "#55707a" },
 };
 
@@ -411,6 +414,7 @@ const CATEGORY_NOTE = {
   給付型: "返さなくてよいお金",
   貸与型: "あとで返すお金",
   減免: "払う学費が減る",
+  "減免＋給付型": "学費が減る／返さなくてよいお金",
   その他: "内容は制度ごとに異なる",
 };
 
@@ -559,15 +563,22 @@ function Question({ index, total, question, current, onAnswer, onBack }) {
 }
 
 function ProgramCard({ program, answerReasons = [] }) {
+  const 案内である = program.recordType === "guide";
   const tagStyle = CATEGORY_STYLE[program.type] || CATEGORY_STYLE["その他"];
+
   return (
     <article className="sn-card">
       <div className="sn-card-top">
-        <span className="sn-tag" style={tagStyle}>
-          {program.type}・{CATEGORY_NOTE[program.type]}
-        </span>
+        {案内である ? (
+          <span className="sn-tag sn-tag-guide">確認先の案内</span>
+        ) : (
+          <span className="sn-tag" style={tagStyle}>
+            {program.type}・{CATEGORY_NOTE[program.type]}
+          </span>
+        )}
         <span className="sn-tag sn-tag-provider">{program.provider}</span>
-        {program.status !== "verified" && (
+        {/* 案内は特定の1つの制度ではないので、制度データとしての確認状態は出さない */}
+        {!案内である && program.status !== "verified" && (
           <span className="sn-tag sn-tag-sample">サンプルデータ</span>
         )}
       </div>
@@ -576,7 +587,9 @@ function ProgramCard({ program, answerReasons = [] }) {
       <p className="sn-card-summary">{program.summary}</p>
 
       <div className="sn-why">
-        <div className="sn-why-head">確認するとよい理由</div>
+        <div className="sn-why-head">
+          {案内である ? "確認してみる価値がある理由" : "確認するとよい理由"}
+        </div>
         {answerReasons.length > 0 && (
           <ul className="sn-why-linked">
             {answerReasons.map((reason, i) => (
@@ -600,7 +613,7 @@ function ProgramCard({ program, answerReasons = [] }) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            公式サイトを開く
+            {案内である ? "探し方を見る" : "公式サイトを開く"}
           </a>
         )}
       </div>
@@ -636,7 +649,9 @@ function Result({ answers, onRestart }) {
   const 優先 = groups.特に確認したほうがよい;
   const 価値あり = groups.確認する価値がある;
   const 知っておく = groups.知っておくとよい;
-  const 表示件数 = 優先.length + 価値あり.length + 知っておく.length;
+  const 案内 = groups.案内;
+  const 制度の件数 = 優先.length + 価値あり.length + 知っておく.length;
+  const 表示件数 = 制度の件数 + 案内.length;
 
   // 上の2グループが空のときは、残りを最初から開いておく
   const 最初から開く = 優先.length === 0 && 価値あり.length === 0;
@@ -701,6 +716,26 @@ function Result({ answers, onRestart }) {
                 ))}
               </div>
             </details>
+          )}
+
+          {/* 学校・地域・民間の支援は、内容が相手によって変わるため、
+              特定の1つの制度と同じ並びには混ぜず、別のまとまりとして案内する */}
+          {案内.length > 0 && (
+            <section className="sn-group sn-guide-group">
+              <div className="sn-group-head">
+                <h3 className="sn-group-title">学校・地域・民間の支援も確認する</h3>
+                <p className="sn-group-note">
+                  学校や住んでいる地域、民間団体にも独自の支援がある場合があります。ここでは、確認先と次に取る行動を案内します。
+                </p>
+              </div>
+              {案内.map((item) => (
+                <ProgramCard
+                  key={item.制度.id}
+                  program={item.制度}
+                  answerReasons={item.回答にもとづく理由}
+                />
+              ))}
+            </section>
           )}
         </>
       )}

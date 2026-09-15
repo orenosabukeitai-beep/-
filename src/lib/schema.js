@@ -2,37 +2,62 @@
  * 制度データが正しい形をしているかを調べるための決まりごとです。
  *
  * ここに書いてある内容は、tests/data.test.js から自動で検査されます。
- * 項目が足りない制度を追加すると、`npm test` が日本語で教えてくれます。
+ * 項目が足りないデータを追加すると、`npm test` が日本語で教えてくれます。
+ *
+ * ■ 2種類のデータがあります
+ *
+ *   program … 実施主体がはっきりしていて、公式情報で内容を確認できる制度
+ *             例：高等教育の修学支援新制度
+ *
+ *   guide   … 学校・自治体・民間団体によって内容が変わるため、
+ *             特定の1つの制度を指さない「確認先の案内」
+ *             例：住んでいる自治体の支援を確認する
+ *
+ * guide を「公式確認済みの制度」として扱ってはいけません。
+ * そのため guide には verified を使えないようにしてあります。
  */
+
+/** データの種類 */
+export const 使える種類 = ["program", "guide"];
+
+/**
+ * status に使ってよい値（データの種類ごとに違います）
+ *
+ *   program の verified … 公式ページと照らし合わせて内容を確認した
+ *   guide   の checked  … 確認先と探し方が妥当であることを確認した
+ *                         （制度の内容を公式確認した、という意味ではない）
+ */
+export const 種類ごとの使える状態 = {
+  program: ["draft", "verified"],
+  guide: ["draft", "checked"],
+};
+
+/**
+ * シグナルの強さに使ってよい値。
+ *
+ * strong は「受け取れる見込みが高い」という意味ではありません。
+ * 「その人の回答から見て、特に確認する価値がある」という意味だけです。
+ */
+export const 使えるシグナルの強さ = ["strong", "normal"];
 
 /** 必ず値が入っていなければいけない項目 */
 export const 必須の項目 = [
+  "recordType",
   "id",
   "name",
   "provider",
-  "type",
   "summary",
   "officialText",
   "status",
 ];
 
-/** 値が無ければ null にしておく項目（推測で埋めてはいけない） */
-export const 不明ならnullにする項目 = [
-  "educationStage",
-  "mainConditions",
-  "incomeConditions",
-  "otherConditions",
-  "supportContent",
-  "applicationPeriod",
-  "officialUrl",
-  "checkedAt",
-  "notes",
-];
-
 /** すべての項目（この順番で JSON に書くと読みやすくなります） */
 export const すべての項目 = [
+  "recordType",
   "id",
   "name",
+  "aliases",
+  "replaces",
   "provider",
   "type",
   "educationStage",
@@ -45,28 +70,21 @@ export const すべての項目 = [
   "applicationPeriod",
   "officialUrl",
   "officialText",
+  "sources",
   "checkedAt",
   "notes",
   "status",
   "matching",
 ];
 
-/** status に使ってよい値 */
-export const 使える状態 = ["draft", "verified"];
-
-/**
- * シグナルの強さに使ってよい値。
- *
- * strong は「受け取れる見込みが高い」という意味ではありません。
- * 「その人の回答から見て、特に確認する価値がある」という意味だけです。
- */
-export const 使えるシグナルの強さ = ["strong", "normal"];
-
-/** 日付は「2026-09-15」の形で書く */
+/** 日付は「2026-09-16」の形で書く */
 const 日付の形 = /^\d{4}-\d{2}-\d{2}$/;
 
+const 日付として正しい = (値) =>
+  typeof 値 === "string" && 日付の形.test(値) && !Number.isNaN(new Date(値).getTime());
+
 /**
- * 制度データを1件調べて、問題点の一覧を返します。
+ * データを1件調べて、問題点の一覧を返します。
  * 問題が無ければ空の配列を返します。
  */
 export function 制度データを調べる(制度) {
@@ -81,17 +99,76 @@ export function 制度データを調べる(制度) {
 
   for (const 項目 of すべての項目) {
     if (!(項目 in 制度)) {
-      問題.push(`「${項目}」の行がありません。_TEMPLATE.json を見て追加してください。`);
+      問題.push(`「${項目}」の行がありません。雛形ファイルを見て追加してください。`);
     }
   }
 
+  問題.push(...種類と状態を調べる(制度));
+  問題.push(...一覧の項目を調べる(制度));
+  問題.push(...URLと日付を調べる(制度));
+  問題.push(...sourcesを調べる(制度));
+  問題.push(...matchingを調べる(制度.matching));
+
+  return 問題;
+}
+
+/** recordType と status の組み合わせを調べる */
+function 種類と状態を調べる(制度) {
+  const 問題 = [];
+
+  if (!使える種類.includes(制度.recordType)) {
+    問題.push(
+      `「recordType」は ${使える種類.join(" か ")} にしてください（いまは「${制度.recordType}」）。`
+    );
+    return 問題;
+  }
+
+  const 使える状態 = 種類ごとの使える状態[制度.recordType];
   if (!使える状態.includes(制度.status)) {
     問題.push(
-      `「status」は ${使える状態.join(" か ")} のどちらかにしてください（いまは「${制度.status}」）。`
+      `${制度.recordType} の「status」は ${使える状態.join(" か ")} にしてください（いまは「${制度.status}」）。` +
+        (制度.recordType === "guide" && 制度.status === "verified"
+          ? " guide は特定の1つの制度ではないため、公式確認済みという意味の verified は使えません。"
+          : "")
     );
   }
 
-  // officialUrl は null か、https で始まる住所
+  if (制度.recordType === "guide" && 制度.type !== null) {
+    問題.push(
+      "guide は内容が相手によって変わるため、「type」（給付型・貸与型など）は null にしてください。"
+    );
+  }
+
+  if (制度.recordType === "program" && (制度.type === null || 制度.type === undefined)) {
+    問題.push("program には「type」（給付型・貸与型・減免など）を書いてください。");
+  }
+
+  return 問題;
+}
+
+/** 配列で書く項目を調べる */
+function 一覧の項目を調べる(制度) {
+  const 問題 = [];
+
+  for (const 項目 of ["whyCheck", "aliases", "replaces", "sources"]) {
+    if (制度[項目] !== undefined && !Array.isArray(制度[項目])) {
+      問題.push(`「${項目}」は [ ] で囲んだ一覧にしてください。`);
+    }
+  }
+
+  if (制度.educationStage !== null && 制度.educationStage !== undefined) {
+    if (!Array.isArray(制度.educationStage)) {
+      問題.push("「educationStage」は [ ] で囲んだ一覧か、分からなければ null にしてください。");
+    }
+  }
+
+  return 問題;
+}
+
+/** URL と日付の形を調べる */
+function URLと日付を調べる(制度) {
+  const 問題 = [];
+
   if (制度.officialUrl !== null && 制度.officialUrl !== undefined) {
     if (typeof 制度.officialUrl !== "string" || !制度.officialUrl.startsWith("https://")) {
       問題.push(
@@ -100,25 +177,77 @@ export function 制度データを調べる(制度) {
     }
   }
 
-  // checkedAt は null か、2026-09-15 の形
   if (制度.checkedAt !== null && 制度.checkedAt !== undefined) {
-    if (typeof 制度.checkedAt !== "string" || !日付の形.test(制度.checkedAt)) {
+    if (!日付として正しい(制度.checkedAt)) {
       問題.push(
-        `「checkedAt」は 2026-09-15 のような形か、まだ確認していなければ null にしてください（いまは「${制度.checkedAt}」）。`
+        `「checkedAt」は 2026-09-16 のような形か、まだ確認していなければ null にしてください（いまは「${制度.checkedAt}」）。`
       );
     }
   }
 
-  if (制度.whyCheck !== undefined && !Array.isArray(制度.whyCheck)) {
-    問題.push("「whyCheck」は [ ] で囲んだ一覧にしてください。");
-  }
+  return 問題;
+}
 
-  問題.push(...matchingを調べる(制度.matching));
+/**
+ * sources（根拠にした公式ページの記録）を調べる。
+ *
+ * verified の program には、必ず根拠を残してもらいます。
+ * どのページを見てこの内容を書いたのかを、後から追えるようにするためです。
+ */
+function sourcesを調べる(制度) {
+  const 問題 = [];
+  const sources = 制度.sources;
+
+  if (!Array.isArray(sources)) return 問題;
+
+  sources.forEach((source, 番号) => {
+    const 場所 = `sources の ${番号 + 1} 件目`;
+
+    if (typeof source.title !== "string" || source.title === "") {
+      問題.push(`${場所}: 「title」にページの名前を書いてください。`);
+    }
+    if (typeof source.url !== "string" || !source.url.startsWith("https://")) {
+      問題.push(`${場所}: 「url」は https:// で始まる住所にしてください。`);
+    }
+    if (!日付として正しい(source.checkedAt)) {
+      問題.push(`${場所}: 「checkedAt」は 2026-09-16 のような形で、見た日を書いてください。`);
+    }
+  });
+
+  // 公式確認済みの program だけ、根拠の整合性まで確認する
+  if (制度.recordType === "program" && 制度.status === "verified") {
+    if (sources.length === 0) {
+      問題.push(
+        "verified の制度には「sources」が1件以上必要です。どの公式ページを見て書いたかを残してください。"
+      );
+      return 問題;
+    }
+
+    const URL一覧 = sources.map((s) => s.url);
+    if (!URL一覧.includes(制度.officialUrl)) {
+      問題.push(
+        "「officialUrl」は、sources に入っているURLのどれかと同じにしてください。" +
+          "利用者に見せるリンクと、根拠にしたページがずれないようにするためです。"
+      );
+    }
+
+    const 日付一覧 = sources.map((s) => s.checkedAt);
+    if (!日付一覧.includes(制度.checkedAt)) {
+      問題.push(
+        "「checkedAt」は、sources のどれかの checkedAt と同じにしてください。" +
+          "実際にページを見た日を制度全体の確認日にするためです。"
+      );
+    }
+
+    if (制度.officialUrl === null) {
+      問題.push("verified の制度には「officialUrl」が必要です。");
+    }
+  }
 
   return 問題;
 }
 
-/** matching（どんな回答の人に出すか）の書き方を調べる */
+/** matching（確認する順番の決め方）の書き方を調べる */
 function matchingを調べる(matching) {
   const 問題 = [];
 
@@ -186,7 +315,7 @@ function matchingを調べる(matching) {
  * 公式サイトでの確認が済んでいる（status が verified）制度だけを調べます。
  * まだ確認していない制度（draft）は、そもそも確認日が無いので調べません。
  *
- * @param 制度一覧  調べたい制度の配列
+ * @param 制度一覧  調べたいデータの配列
  * @param 何か月まで  これ以上たっていたら古いとみなす月数
  * @param 今日  比較の基準にする日（テストで日付を固定するために渡せます）
  */

@@ -78,8 +78,6 @@ describe("3つのグループへの分け方", () => {
     const id = 結果.特に確認したほうがよい.map((項目) => 項目.制度.id);
 
     expect(id).toContain("mext-shugaku");
-    expect(id).toContain("jasso-kyufu");
-    expect(id).toContain("care-leaver");
   });
 
   it("normal だけの制度は「確認する価値がある」に入る", () => {
@@ -87,47 +85,110 @@ describe("3つのグループへの分け方", () => {
     const id = 結果.確認する価値がある.map((項目) => 項目.制度.id);
 
     expect(id).toContain("jasso-taiyo");
-    expect(id).toContain("school-genmen");
-    expect(id).toContain("minkan");
   });
 
   it("シグナルが無い制度も、対象外でなければ「知っておくとよい」に残る", () => {
-    const 結果 = 分類する(家計が苦しい人);
+    const 余裕がある人 = { ...家計が苦しい人, familySupport: "enough", grade: "hs1" };
+    const 結果 = 分類する(余裕がある人);
     const id = 結果.知っておくとよい.map((項目) => 項目.制度.id);
 
-    // 住んでいる地域を聞いていないので、自治体の制度は関連を判断できない。
-    // それでも消さずに残す。
-    expect(id).toContain("local-gov");
+    // 家計の手がかりが無いと、貸与型はシグナルが当たらない。それでも消さない。
+    expect(id).toContain("jasso-taiyo");
   });
 
   it("strong と normal の両方があるときは「特に確認したほうがよい」に入る", () => {
-    // jasso-kyufu は familySupport で strong、grade で normal のシグナルを持つ
-    const 結果 = 分類する(家計が苦しい人);
+    // mext-shugaku は familySupport で strong、grade(hs3) で normal のシグナルを持つ
+    const 高3で家計が苦しい人 = { ...家計が苦しい人, grade: "hs3" };
+    const 結果 = 分類する(高3で家計が苦しい人);
+
     expect(結果.特に確認したほうがよい.map((項目) => 項目.制度.id)).toContain(
-      "jasso-kyufu"
+      "mext-shugaku"
     );
     expect(結果.確認する価値がある.map((項目) => 項目.制度.id)).not.toContain(
-      "jasso-kyufu"
+      "mext-shugaku"
     );
   });
 
   it("家計に余裕がある人でも、主要な制度が消えず順位が下がるだけ", () => {
-    const 余裕がある人 = { ...家計が苦しい人, familySupport: "enough" };
+    const 余裕がある人 = { ...家計が苦しい人, familySupport: "enough", grade: "hs1" };
     const 結果 = 分類する(余裕がある人);
     const 優先 = 結果.特に確認したほうがよい.map((項目) => 項目.制度.id);
 
-    // Ver.0 ではこの2件は「そもそも表示されない」だった。
+    // Ver.0 ではこの制度は「そもそも表示されない」だった。
     // Ver.1 では消さず、優先グループから外すだけにする。
     expect(優先).not.toContain("mext-shugaku");
-    expect(優先).not.toContain("jasso-kyufu");
-
     expect(表示id(余裕がある人)).toContain("mext-shugaku");
-    expect(表示id(余裕がある人)).toContain("jasso-kyufu");
-
-    // 家計の手がかりが無い mext-shugaku は、いちばん下のグループへ
     expect(結果.知っておくとよい.map((項目) => 項目.制度.id)).toContain(
       "mext-shugaku"
     );
+  });
+});
+
+describe("program と guide を分けて扱う", () => {
+  const 家計が苦しい人 = {
+    grade: "hs2",
+    schoolType: "private",
+    living: "alone",
+    familySupport: "difficult",
+    researched: "not_yet",
+    careBackground: "yes",
+  };
+
+  it("guide は制度の3グループに混ざらない", () => {
+    const 結果 = 分類する(家計が苦しい人);
+    const 制度グループのid = [
+      ...結果.特に確認したほうがよい,
+      ...結果.確認する価値がある,
+      ...結果.知っておくとよい,
+    ].map((項目) => 項目.制度.id);
+
+    for (const id of 制度グループのid) {
+      const データ = 制度データ.find((d) => d.id === id);
+      expect(データ.recordType, `${id} は guide なのに制度の並びに入っています`).toBe(
+        "program"
+      );
+    }
+  });
+
+  it("guide は「案内」のまとまりに入る", () => {
+    const 結果 = 分類する(家計が苦しい人);
+    const 案内のid = 結果.案内.map((項目) => 項目.制度.id);
+
+    expect(案内のid).toContain("school-genmen");
+    expect(案内のid).toContain("local-gov");
+    expect(案内のid).toContain("minkan");
+    expect(案内のid).toContain("care-leaver");
+  });
+
+  it("guide にも、回答と結びついた理由が付く", () => {
+    const 結果 = 分類する(家計が苦しい人);
+    const 施設 = 結果.案内.find((項目) => 項目.制度.id === "care-leaver");
+    expect(施設.回答にもとづく理由.length).toBeGreaterThan(0);
+  });
+
+  it("guide にも除外の決まりが効く", () => {
+    const 施設経験なし = { ...家計が苦しい人, careBackground: "no" };
+    const 結果 = 分類する(施設経験なし);
+    expect(結果.案内.map((項目) => 項目.制度.id)).not.toContain("care-leaver");
+  });
+
+  it("すべての guide が、どの回答でも制度グループに現れない", () => {
+    const guideのid = 制度データ
+      .filter((d) => d.recordType === "guide")
+      .map((d) => d.id);
+
+    for (const 回答 of 回答パターン) {
+      const 結果 = 分類する(回答);
+      const 制度グループのid = [
+        ...結果.特に確認したほうがよい,
+        ...結果.確認する価値がある,
+        ...結果.知っておくとよい,
+      ].map((項目) => 項目.制度.id);
+
+      for (const id of guideのid) {
+        expect(制度グループのid).not.toContain(id);
+      }
+    }
   });
 });
 
@@ -206,7 +267,7 @@ describe("1,728通りすべてで守られる決まり", () => {
     expect(違反).toEqual([]);
   });
 
-  it("除外されていない制度は、必ず3グループのどこかに入る", () => {
+  it("除外されていないものは、必ずどこかのまとまりに入る", () => {
     const 違反 = [];
     for (const 回答 of 回答パターン) {
       const 結果 = 分類する(回答);
@@ -214,6 +275,7 @@ describe("1,728通りすべてで守られる決まり", () => {
         結果.特に確認したほうがよい.length +
         結果.確認する価値がある.length +
         結果.知っておくとよい.length +
+        結果.案内.length +
         結果.対象外.length;
       if (合計 !== 制度データ.length) 違反.push({ 回答, 合計 });
     }
@@ -288,7 +350,23 @@ describe("Ver.0 で見えていた制度が、Ver.1 で見えなくなってい�
     expect(ver0.パターン数).toBe(1728);
   });
 
-  it("【重要】Ver.0 で表示されていた制度は、すべて Ver.1 でも表示される", () => {
+  /**
+   * 旧 id が、いまも情報として残っているかを判定する。
+   *
+   * 制度を1枚にまとめたときは id が1つ消えるが、情報が消えたわけではない。
+   * まとめた側が replaces に旧 id を記録していれば「残っている」とみなす。
+   * （高等教育の修学支援新制度が jasso-kyufu を統合したのがこの例）
+   */
+  function 旧idが残っているか(旧id, 表示中のid) {
+    if (表示中のid.includes(旧id)) return true;
+
+    return 表示中のid.some((id) => {
+      const 制度 = 制度データ.find((データ) => データ.id === id);
+      return (制度?.replaces || []).includes(旧id);
+    });
+  }
+
+  it("【重要】Ver.0 で表示されていた制度は、いまも情報として残っている", () => {
     const 消えたもの = [];
 
     for (const 回答 of 回答パターン) {
@@ -297,7 +375,7 @@ describe("Ver.0 で見えていた制度が、Ver.1 で見えなくなってい�
       const ver1の制度 = 表示id(回答);
 
       for (const id of ver0の制度) {
-        if (!ver1の制度.includes(id)) {
+        if (!旧idが残っているか(id, ver1の制度)) {
           消えたもの.push(`${鍵} で「${id}」が見えなくなりました`);
         }
       }
@@ -305,7 +383,26 @@ describe("Ver.0 で見えていた制度が、Ver.1 で見えなくなってい�
 
     expect(
       [...new Set(消えたもの)],
-      "Ver.1 は優先順位を下げるだけで、制度を消してはいけません"
+      "Ver.1 は優先順位を下げるか統合するだけで、情報を消してはいけません"
+    ).toEqual([]);
+  });
+
+  it("統合した制度は、replaces に旧 id を記録している", () => {
+    // Ver.0 に出てくる id のうち、いまのデータに無いものは
+    // 必ずどこかの replaces に記録されていなければならない
+    const ver0のid = new Set(
+      Object.values(ver0.結果).flatMap((値) => 値.split(",").filter(Boolean))
+    );
+    const いまのid = new Set(制度データ.map((制度) => 制度.id));
+    const 統合された先 = new Set(制度データ.flatMap((制度) => 制度.replaces || []));
+
+    const 行方不明 = [...ver0のid].filter(
+      (id) => !いまのid.has(id) && !統合された先.has(id)
+    );
+
+    expect(
+      行方不明,
+      "Ver.0 にあった id が、どこにも記録されないまま消えています"
     ).toEqual([]);
   });
 
@@ -453,7 +550,7 @@ describe("候補になった理由が、回答と結びついている", () => {
     expect(理由を取る(余裕あり)).toBe("");
   });
 
-  it("シグナルの無い制度には、回答にもとづく理由が付かない", () => {
+  it("シグナルの無いものには、回答にもとづく理由が付かない", () => {
     const 結果 = 分類する({
       grade: "hs2",
       schoolType: "private",
@@ -463,9 +560,8 @@ describe("候補になった理由が、回答と結びついている", () => {
       careBackground: "no",
     });
 
-    const 自治体 = 結果.知っておくとよい.find(
-      (項目) => 項目.制度.id === "local-gov"
-    );
+    // 住んでいる地域を聞いていないので、自治体の案内は回答と結びつけられない
+    const 自治体 = 結果.案内.find((項目) => 項目.制度.id === "local-gov");
     expect(自治体.回答にもとづく理由).toEqual([]);
   });
 

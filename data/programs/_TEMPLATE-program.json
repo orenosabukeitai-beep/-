@@ -1,0 +1,27 @@
+{
+  "recordType": "program",
+  "id": "",
+  "name": "",
+  "aliases": [],
+  "replaces": [],
+  "provider": "",
+  "type": "",
+  "educationStage": null,
+  "summary": "",
+  "whyCheck": [],
+  "mainConditions": null,
+  "incomeConditions": null,
+  "otherConditions": null,
+  "supportContent": null,
+  "applicationPeriod": null,
+  "officialUrl": null,
+  "officialText": "",
+  "sources": [],
+  "checkedAt": null,
+  "notes": null,
+  "status": "draft",
+  "matching": {
+    "excludeIf": {},
+    "signals": []
+  }
+}

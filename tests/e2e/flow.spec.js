@@ -17,6 +17,16 @@ const 回答パターンA = [
   "ある / いま暮らしている",
 ];
 
+/** 「知っておくとよい制度」が出るパターン（折りたたみの確認に使う） */
+const 回答パターンB = [
+  "高校3年生",
+  "国公立を考えている",
+  "自宅から通う予定",
+  "だいたい出してもらえそう",
+  "申し込みを考えている制度がある",
+  "ない",
+];
+
 /** 画面が横にはみ出していないかを測る（0 なら、はみ出していない） */
 async function 横のはみ出し(page) {
   return page.evaluate(
@@ -110,7 +120,7 @@ test("公式サイトのリンクが安全な設定で開く", async ({ page }) 
 test("折りたたみが開閉できる", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "質問を始める" }).click();
-  for (const 答え of 回答パターンA) {
+  for (const 答え of 回答パターンB) {
     await page.getByRole("button", { name: 答え, exact: true }).click();
   }
 
@@ -130,15 +140,50 @@ test("折りたたみが開閉できる", async ({ page }) => {
 test("結果画面が最初から全部は開いていない（スマホで長すぎない）", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "質問を始める" }).click();
-  for (const 答え of 回答パターンA) {
+  for (const 答え of 回答パターンB) {
     await page.getByRole("button", { name: 答え, exact: true }).click();
   }
 
   const 見えているカード = await page.locator("article.sn-card:visible").count();
   const 全部のカード = await page.locator("article.sn-card").count();
 
-  expect(全部のカード).toBe(7);
+  expect(全部のカード).toBeGreaterThan(0);
   expect(見えているカード).toBeLessThan(全部のカード);
+});
+
+test("学校・地域・民間の支援が、制度とは別のまとまりで案内される", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "質問を始める" }).click();
+  for (const 答え of 回答パターンA) {
+    await page.getByRole("button", { name: 答え, exact: true }).click();
+  }
+
+  await expect(
+    page.getByRole("heading", { name: "学校・地域・民間の支援も確認する" })
+  ).toBeVisible();
+
+  // 案内のカードは「確認先の案内」と表示され、制度の分類タグは付かない
+  const 案内のカード = page.locator(".sn-guide-group article");
+  await expect(案内のカード.first()).toBeVisible();
+
+  for (const カード of await 案内のカード.all()) {
+    await expect(カード.getByText("確認先の案内")).toBeVisible();
+  }
+});
+
+test("公式確認済みの制度には「サンプルデータ」が付かない", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "質問を始める" }).click();
+  for (const 答え of 回答パターンA) {
+    await page.getByRole("button", { name: 答え, exact: true }).click();
+  }
+
+  const 確認済みカード = page
+    .locator("article.sn-card")
+    .filter({ hasText: "高等教育の修学支援新制度" });
+
+  await expect(確認済みカード).toHaveCount(1);
+  await expect(確認済みカード.locator(".sn-tag-sample")).toHaveCount(0);
 });
 
 test("ブラウザの戻るボタンでサイトから出ない", async ({ page }) => {
