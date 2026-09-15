@@ -542,9 +542,9 @@ function Intro({ onStart }) {
       </button>
 
       <p className="sn-disclaimer">
-        このアプリは、受けられるかどうかを決めるものではありません。「確認してみるとよい制度」を知るための入口です。条件や金額、締切は必ず公式サイトで確認してください。
+        これは試作版です。受けられるかどうかを決めるものではありません。「確認してみるとよい制度」を知るための入口です。条件や金額、締切は必ず公式サイトで確認してください。
         <br />
-        入力した内容は保存されません。画面を閉じると消えます。
+        答えた内容は、保存も送信もしていません。画面を閉じると消えます。
       </p>
     </div>
   );
@@ -858,7 +858,7 @@ function Result({ answers, onRestart }) {
         <br />
         「サンプルデータ」と表示されている制度は、内容の確認がまだ済んでいないものです。
         <br />
-        入力した内容は保存していません。
+        これは試作版です。答えた内容は、保存も送信もしていません。
       </p>
 
       <div className="sn-restart">
@@ -955,7 +955,7 @@ export default function ShingakuNavi() {
       <div className="sn-shell">
         <div className="sn-brand">
           <h1 className="sn-brand-name">進学支援ナビ</h1>
-          <span className="sn-brand-ver">Ver.1</span>
+          <span className="sn-brand-ver">試作版</span>
         </div>
 
         {phase === "intro" && <Intro onStart={() => 進む("questions", 0)} />}

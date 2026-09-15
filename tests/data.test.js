@@ -509,3 +509,45 @@ describe("案内（guide）4件の整備", () => {
     expect(JSON.stringify(民間)).not.toMatch(/財団法人[^・]/);
   });
 });
+
+describe("公開（デプロイ）の設定", () => {
+  const vercel設定 = JSON.parse(
+    readFileSync(join(process.cwd(), "vercel.json"), "utf-8")
+  );
+
+  it("正しい JSON として読める", () => {
+    expect(vercel設定).toBeTypeOf("object");
+  });
+
+  it("ビルドの設定が、いまの構成と合っている", () => {
+    expect(vercel設定.framework).toBe("vite");
+    expect(vercel設定.buildCommand).toBe("npm run build");
+    expect(vercel設定.outputDirectory).toBe("dist");
+  });
+
+  it("package.json の build コマンドと一致している", () => {
+    const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf-8"));
+    expect(vercel設定.buildCommand).toBe("npm run build");
+    expect(pkg.scripts.build).toBeTruthy();
+  });
+
+  it("安全のための設定が入っている", () => {
+    const ヘッダー = vercel設定.headers[0].headers.map((h) => h.key);
+    expect(ヘッダー).toContain("X-Content-Type-Options");
+    expect(ヘッダー).toContain("X-Frame-Options");
+    // 公式サイトへ移動したときに、どこから来たかを伝えない
+    expect(ヘッダー).toContain("Referrer-Policy");
+  });
+
+  it("【重要】外部サービスへの送信設定が入っていない", () => {
+    const 全文 = JSON.stringify(vercel設定);
+    for (const 危険 of ["analytics", "speedInsights", "env", "rewrites"]) {
+      expect(全文, `${危険} は今回は使いません`).not.toContain(危険);
+    }
+  });
+
+  it("dist が git に入らないようになっている", () => {
+    const gitignore = readFileSync(join(process.cwd(), ".gitignore"), "utf-8");
+    expect(gitignore).toMatch(/^dist$/m);
+  });
+});

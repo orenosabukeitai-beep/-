@@ -101,10 +101,18 @@ describe("トップページ", () => {
     ).toBeInTheDocument();
   });
 
-  it("入力内容を保存しないことが書かれている", () => {
+  it("【重要】答えた内容を保存も送信もしないと書かれている", () => {
     render(<ShingakuNavi />);
 
-    expect(screen.getByText(/入力した内容は保存されません/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/答えた内容は、保存も送信もしていません/)
+    ).toBeInTheDocument();
+  });
+
+  it("【重要】試作版であることが書かれている", () => {
+    render(<ShingakuNavi />);
+
+    expect(screen.getByText(/これは試作版です/)).toBeInTheDocument();
   });
 
   it("受給を断定するサービスではないと書かれている", () => {
