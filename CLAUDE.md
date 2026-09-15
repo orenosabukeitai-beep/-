@@ -36,7 +36,8 @@
 ```
 index.html                  ページの入れ物
 data/programs/*.json        制度データ（制度1件 = ファイル1つ）
-data/programs/_TEMPLATE.json 新しい制度を作るときの雛形。制度として読み込まれない
+data/programs/_TEMPLATE-program.json  制度を作るときの雛形（読み込まれない）
+data/programs/_TEMPLATE-guide.json    案内を作るときの雛形（読み込まれない）
 src/main.jsx                アプリの起動
 src/index.css               背景と高さだけの最小限のCSS
 src/lib/loadPrograms.js     data/programs/ を自動で読み込む
@@ -99,8 +100,16 @@ guide は結果画面で制度の3グループに混ぜず、「学校・地域�
 
 ### 現在の状態
 
-- `mext-shugaku`（高等教育の修学支援新制度）… **verified**。2026-09-16 に確認
-- それ以外の program・guide … すべて `draft`。公式確認はこれから
+| id | 種別 | 状態 | 確認日 |
+| --- | --- | --- | --- |
+| `mext-shugaku` | program | **verified** | 2026-09-16 |
+| `jasso-taiyo` | program | **verified** | 2026-09-16 |
+| `school-genmen` / `local-gov` / `minkan` / `care-leaver` | guide | draft | — |
+
+貸与奨学金は返済が必要なため、**strong シグナルを付けていない。**
+給付・減免より強くすすめているように見せないため。この方針は変えない。
+
+次の作業は guide 4件の checked 化。
 
 金額・所得基準・締切のような数字は、**公式確認したものだけ**を書く。
 家計基準は数字で線引きせず、JASSOの進学資金シミュレーターへ誘導する。
@@ -209,3 +218,13 @@ npm run test:e2e     スマホ表示の確認（本物のブラウザを使う�
 
 外部API、ログイン、データベース、決済、通知、アカウント管理。
 Ver.0の目的は、高校生に触ってもらって反応を見ることなので、機能追加より文言と流れの検証を優先する。
+
+### 1つの制度の中の種類（variants）
+
+同じ制度に種類があるときは `variants` で表す。**別カードに分けない。**
+申し込み窓口も時期も同じものを分けると、別々の制度に見えてしまう。
+
+例：JASSO 貸与奨学金の第一種（無利子）と第二種（有利子）。
+
+`cautions` は申し込む前に知っておきたい注意で、カードに黄色い枠で出る。
+公式情報で確認できたことだけを書く。個別の金額計算はしない。

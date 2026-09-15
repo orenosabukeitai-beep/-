@@ -60,9 +60,11 @@ export const すべての項目 = [
   "replaces",
   "provider",
   "type",
+  "variants",
   "educationStage",
   "summary",
   "whyCheck",
+  "cautions",
   "mainConditions",
   "incomeConditions",
   "otherConditions",
@@ -150,16 +152,56 @@ function 種類と状態を調べる(制度) {
 function 一覧の項目を調べる(制度) {
   const 問題 = [];
 
-  for (const 項目 of ["whyCheck", "aliases", "replaces", "sources"]) {
+  for (const 項目 of ["whyCheck", "aliases", "replaces", "sources", "cautions"]) {
     if (制度[項目] !== undefined && !Array.isArray(制度[項目])) {
       問題.push(`「${項目}」は [ ] で囲んだ一覧にしてください。`);
     }
   }
 
+  問題.push(...variantsを調べる(制度.variants));
+
   if (制度.educationStage !== null && 制度.educationStage !== undefined) {
     if (!Array.isArray(制度.educationStage)) {
       問題.push("「educationStage」は [ ] で囲んだ一覧か、分からなければ null にしてください。");
     }
+  }
+
+  return 問題;
+}
+
+/**
+ * variants（1つの制度の中の種類）を調べる。
+ *
+ * たとえば JASSO の貸与奨学金には第一種（無利子）と第二種（有利子）があります。
+ * 申し込み窓口も時期も同じなので、カードは1枚にまとめ、
+ * 中で違いが分かるようにするためのものです。
+ *
+ * 種類が無い制度は null にしてください。
+ */
+function variantsを調べる(variants) {
+  if (variants === null || variants === undefined) return [];
+
+  if (!Array.isArray(variants)) {
+    return ["「variants」は [ ] で囲んだ一覧か、種類が無ければ null にしてください。"];
+  }
+
+  const 問題 = [];
+
+  variants.forEach((種類, 番号) => {
+    const 場所 = `variants の ${番号 + 1} 件目`;
+    for (const 項目 of ["id", "name", "summary"]) {
+      if (typeof 種類[項目] !== "string" || 種類[項目] === "") {
+        問題.push(`${場所}: 「${項目}」を書いてください。`);
+      }
+    }
+    if (種類.interest !== undefined && typeof 種類.interest !== "string") {
+      問題.push(`${場所}: 「interest」は文字で書いてください（例：無利子）。`);
+    }
+  });
+
+  const id一覧 = variants.map((種類) => 種類.id);
+  if (new Set(id一覧).size !== id一覧.length) {
+    問題.push("「variants」の id が重複しています。");
   }
 
   return 問題;

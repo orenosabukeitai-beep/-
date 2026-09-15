@@ -6,12 +6,14 @@
   "replaces": [],
   "provider": "大学・専門学校",
   "type": null,
+  "variants": null,
   "educationStage": null,
   "summary": "学校が自分で用意している授業料の減免や、成績などで選ばれる制度です。学校によって名前も内容もちがうため、志望校のサイトで確認します。",
   "whyCheck": [
     "国の制度とは別に申し込めることがあり、見落とされやすい支援です。",
     "志望校を選ぶときの判断材料になります。"
   ],
+  "cautions": [],
   "mainConditions": null,
   "incomeConditions": null,
   "otherConditions": null,
@@ -27,7 +29,13 @@
     "excludeIf": {},
     "signals": [
       {
-        "when": { "schoolType": ["national", "private", "both"] },
+        "when": {
+          "schoolType": [
+            "national",
+            "private",
+            "both"
+          ]
+        },
         "reason": "進学先の方向を考えていると答えたため、志望校のサイトで学費と支援をあわせて確認できます。",
         "strength": "normal"
       }

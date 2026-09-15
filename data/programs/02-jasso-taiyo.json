@@ -1,34 +1,118 @@
 {
   "recordType": "program",
   "id": "jasso-taiyo",
-  "name": "日本学生支援機構（JASSO）の貸与型奨学金",
-  "aliases": [],
+  "name": "JASSO 貸与奨学金（第一種・第二種）",
+  "aliases": ["貸与奨学金", "第一種奨学金", "第二種奨学金", "貸与型奨学金"],
   "replaces": [],
-  "provider": "国（日本学生支援機構）",
+  "provider": "独立行政法人 日本学生支援機構（JASSO）",
   "type": "貸与型",
-  "educationStage": null,
-  "summary": "卒業後に返していくタイプの奨学金です。利子がつかないものと、つくものがあります。多くの学生が利用しています。",
-  "whyCheck": [
-    "給付型だけでは足りないときに、組み合わせて使う人が多い制度です。",
-    "返す金額や期間は借り方で変わるので、申し込む前に仕組みを知っておくと安心です。"
+  "variants": [
+    {
+      "id": "first",
+      "name": "第一種奨学金",
+      "interest": "無利子",
+      "summary": "返す必要はありますが、利子は付きません。"
+    },
+    {
+      "id": "second",
+      "name": "第二種奨学金",
+      "interest": "有利子",
+      "summary": "返す必要があり、利子も付きます。返すときは、借りた総額に利子を加えた額を返します。"
+    }
   ],
-  "mainConditions": null,
-  "incomeConditions": null,
-  "otherConditions": null,
-  "supportContent": null,
-  "applicationPeriod": null,
-  "officialUrl": "https://www.jasso.go.jp/",
-  "officialText": "日本学生支援機構（JASSO）のサイトで、貸与型の種類と返し方の説明を確認してください。",
-  "sources": [],
-  "checkedAt": null,
-  "notes": null,
-  "status": "draft",
+  "educationStage": ["大学", "短期大学", "高等専門学校", "専修学校（専門課程）"],
+  "summary": "日本学生支援機構（JASSO）が行っている、返す必要のある奨学金です。「貸与」とは、卒業後などに返していくお金のことです。利子の付かない第一種と、利子の付く第二種があります。",
+  "whyCheck": [
+    "返す必要があるお金です。卒業後などに返していきます。",
+    "利子の付かない第一種と、利子の付く第二種があり、それぞれ条件がちがいます。",
+    "進学する前に申し込む「予約採用」があり、在学している高校等、または卒業した高校等を通じて申し込みます。"
+  ],
+  "cautions": [
+    "給付奨学金と第一種奨学金を併せて利用する場合、給付奨学金の支援区分などに応じて第一種の貸与月額が調整されます。多くの場合は第一種の額が減り、0円になることもあります。まず給付・減免の制度を確認してから、足りない分をどうするか考えると整理しやすくなります。",
+    "第一種と第二種では、学力と家計に関する基準がちがいます。どちらに当てはまるかは、このアプリでは判断できません。JASSOの「進学資金シミュレーター」や、高校・進学先・JASSOで確認してください。",
+    "第二種の利率は、借り始めるときではなく、借り終わるときに決まります。利率は変わることがあるため、最新の情報は公式ページで確認してください。"
+  ],
+  "mainConditions": "国内の大学・短期大学・高等専門学校・専修学校（専門課程）などに在学する人、またはこれから進学する人が対象になります。",
+  "incomeConditions": "第一種と第二種には、それぞれ学力に関する基準と家計に関する基準があり、その内容は第一種と第二種でちがいます。収入・所得の目安は公式ページに示されていますが、世帯の構成などによって結果が変わるため、年収の数字だけでは判断できません。JASSOの「進学資金シミュレーター」や、高校・進学先・JASSOの窓口で確認してください。",
+  "otherConditions": "条件を満たす場合、第一種と第二種を併せて借りる方法もあります。ただし、併せて借りられるかどうかを、このアプリで判断することはできません。",
+  "supportContent": "毎月借りられる金額は、学校の種類、国公立か私立か、自宅から通うか自宅外から通うかなどによって、選べる金額がちがいます。具体的な金額は公式ページで確認してください。",
+  "applicationPeriod": "進学する前に申し込む「予約採用」と、進学した後に申し込む「在学採用」があります。予約採用は、原則として在学している高校等、または卒業した高校等を通じて申し込みます。卒業した人も、一定の期間内であれば申し込める場合があります。2027年3月に高校等を卒業する予定の人などが、2027年度の進学に向けた予約採用の対象になっています。在学採用は春と秋に行われます。申込期限は学校ごとにちがい、全国共通の締切日はありません。高校の奨学金担当・進路担当の先生に確認してください。",
+  "officialUrl": "https://www.jasso.go.jp/shogakukin/about/taiyo/",
+  "officialText": "日本学生支援機構（JASSO）の「貸与奨学金」のページで、第一種と第二種のちがい、条件、申し込み方法を確認してください。申し込みの時期は、高校の奨学金担当・進路担当の先生に聞くのが確実です。",
+  "sources": [
+    {
+      "title": "貸与奨学金（返済必要）（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/about/taiyo/",
+      "checkedAt": "2026-09-16",
+      "note": "貸与奨学金全体、第一種・第二種の位置付け"
+    },
+    {
+      "title": "第一種奨学金（無利子で借りる）（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/about/taiyo/taiyo_1shu/index.html",
+      "checkedAt": "2026-09-16",
+      "note": "第一種が無利子であること、各条件への公式導線"
+    },
+    {
+      "title": "第二種奨学金（有利子で借りる）（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/about/taiyo/taiyo_2shu/index.html",
+      "checkedAt": "2026-09-16",
+      "note": "第二種が有利子であること、各条件への公式導線"
+    },
+    {
+      "title": "進学前に申し込む（予約採用）（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/moshikomi/yoyaku/",
+      "checkedAt": "2026-09-16",
+      "note": "予約採用の申込方法"
+    },
+    {
+      "title": "進学前（予約採用）の第一種・第二種併用貸与の家計基準（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/about/taiyo/heiyo/kakei/yoyaku.html",
+      "checkedAt": "2026-09-16",
+      "note": "第一種と第二種で家計基準が異なること、年収の目安だけでは判定できないこと"
+    },
+    {
+      "title": "第一種奨学金の貸与月額（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/about/taiyo/taiyo_1shu/kingaku/index.html",
+      "checkedAt": "2026-09-16",
+      "note": "第一種の貸与月額が条件によって異なること"
+    },
+    {
+      "title": "第二種奨学金の貸与月額（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/about/taiyo/taiyo_2shu/kingaku.html",
+      "checkedAt": "2026-09-16",
+      "note": "第二種の貸与月額"
+    },
+    {
+      "title": "第二種奨学金の利子と利率の算定方法（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/about/taiyo/taiyo_2shu/riritsu_santei.html",
+      "checkedAt": "2026-09-16",
+      "note": "第二種が有利子であること、適用利率が貸与終了時に決定すること"
+    },
+    {
+      "title": "給付奨学金と併せて利用する第一種奨学金（併給調整）（日本学生支援機構）",
+      "url": "https://www.jasso.go.jp/shogakukin/about/taiyo/taiyo_1shu/heikyutyosei/index.html",
+      "checkedAt": "2026-09-16",
+      "note": "給付奨学金との併給調整"
+    }
+  ],
+  "checkedAt": "2026-09-16",
+  "notes": "第一種（無利子）と第二種（有利子）は申し込み窓口も時期も同じため、1枚のカードにまとめ、中で違いが分かるようにしています。入学時特別増額貸与奨学金と、緊急採用・応急採用は、このカードには含めていません。大学院向けの制度も中心にしていません。",
+  "status": "verified",
   "matching": {
     "excludeIf": {},
     "signals": [
       {
-        "when": { "familySupport": ["difficult", "partial", "unknown"] },
-        "reason": "給付型だけでは足りないときに組み合わせて使う人が多いため、仕組みを知っておくと選べる道が増えます。",
+        "when": {
+          "familySupport": ["difficult", "partial", "unknown"]
+        },
+        "reason": "進学費用の準備に不安がある場合に確認しておきたい、返済型の支援です。",
+        "strength": "normal"
+      },
+      {
+        "when": {
+          "grade": ["hs3"]
+        },
+        "reason": "高校3年生と答えたためです。進学する前に申し込む「予約採用」があるので、いまのうちに高校の奨学金担当へ時期を聞いておけます。",
         "strength": "normal"
       }
     ]

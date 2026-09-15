@@ -71,13 +71,6 @@ function 表示中の制度名() {
     .map((カード) => within(カード).getByRole("heading").textContent);
 }
 
-/** 折りたたみを開かなくても、最初から見えている制度名 */
-function 最初から見える制度名() {
-  return [...document.querySelectorAll(".sn-group article")].map(
-    (カード) => within(カード).getByRole("heading").textContent
-  );
-}
-
 /** 指定したグループに入っている制度名 */
 function グループの制度名(見出し) {
   const グループ = [...document.querySelectorAll(".sn-group")].find(
@@ -375,12 +368,6 @@ describe("結果画面", () => {
     ).toBeInTheDocument();
   });
 
-  it("未確認のデータには「サンプルデータ」と表示される", async () => {
-    render(<ShingakuNavi />);
-    await 最後まで回答する(回答パターンA);
-
-    expect(screen.getAllByText("サンプルデータ").length).toBeGreaterThan(0);
-  });
 
   it("もう一度やり直せる", async () => {
     render(<ShingakuNavi />);
@@ -429,16 +416,7 @@ describe("結果画面：3つのグループ分け（Ver.1）", () => {
     await 最後まで回答する(回答パターンA);
 
     const 価値あり = グループの制度名("確認する価値がある制度");
-    expect(価値あり).toContain("日本学生支援機構（JASSO）の貸与型奨学金");
-  });
-
-  it("シグナルの無い制度は折りたたみの中に入る", async () => {
-    render(<ShingakuNavi />);
-    await 最後まで回答する(回答パターンB);
-
-    expect(折りたたみの中の制度名()).toContain(
-      "日本学生支援機構（JASSO）の貸与型奨学金"
-    );
+    expect(価値あり).toContain("JASSO 貸与奨学金（第一種・第二種）");
   });
 
   it("【重要】受給の見込みを思わせる表現を使っていない", async () => {
@@ -451,13 +429,8 @@ describe("結果画面：3つのグループ分け（Ver.1）", () => {
     }
   });
 
-  it("最初に見える件数が、全体より少ない（スマホで長くなりすぎない）", async () => {
-    render(<ShingakuNavi />);
-    await 最後まで回答する(回答パターンB);
-
-    // 折りたたみの中にあるぶん、最初に見える数のほうが少ない
-    expect(最初から見える制度名().length).toBeLessThan(表示中の制度名().length);
-  });
+  // 「折りたたみがあるぶん最初に見える数が少ない」ことは、
+  // いまの制度2件では再現できないため tests/collapse.test.jsx で確認しています。
 });
 
 describe("結果画面：学校・地域・民間の支援（guide）", () => {
@@ -554,15 +527,6 @@ describe("公式確認済みの制度（verified）の見せ方", () => {
     expect(カード.querySelector(".sn-tag-sample")).toBeNull();
   });
 
-  it("未確認の制度には「サンプルデータ」が付く", async () => {
-    render(<ShingakuNavi />);
-    await 最後まで回答する(回答パターンA);
-
-    const カード = [...document.querySelectorAll("article")].find((要素) =>
-      要素.textContent.includes("貸与型奨学金")
-    );
-    expect(カード.querySelector(".sn-tag-sample")).not.toBeNull();
-  });
 
   it("給付奨学金と授業料減免が1枚のカードにまとまっている", async () => {
     render(<ShingakuNavi />);
@@ -588,46 +552,6 @@ describe("公式確認済みの制度（verified）の見せ方", () => {
     // 「世帯年収○○万円以下」のような数字での線引きを出さない
     expect(画面の文字).not.toMatch(/年収\s*\d/);
   });
-});
-
-describe("結果画面：折りたたみの開閉", () => {
-  // パターンB は「確認する価値がある制度」と「知っておくとよい制度」の
-  // 両方が出るため、折りたたみの動きを確かめられる
-  it("最初は閉じている", async () => {
-    render(<ShingakuNavi />);
-    await 最後まで回答する(回答パターンB);
-
-    const 折りたたみ = document.querySelector(".sn-more");
-    expect(折りたたみ).not.toBeNull();
-    expect(折りたたみ.open).toBe(false);
-  });
-
-  it("件数つきの見出しが出ている", async () => {
-    render(<ShingakuNavi />);
-    await 最後まで回答する(回答パターンB);
-
-    expect(
-      screen.getByText(/ほかにも確認できる制度があります（\d+件）/)
-    ).toBeInTheDocument();
-  });
-
-  it("押すと開き、もう一度押すと閉じる", async () => {
-    render(<ShingakuNavi />);
-    await 最後まで回答する(回答パターンB);
-
-    const 折りたたみ = document.querySelector(".sn-more");
-    const つまみ = 折りたたみ.querySelector("summary");
-
-    await user.click(つまみ);
-    expect(折りたたみ.open).toBe(true);
-
-    await user.click(つまみ);
-    expect(折りたたみ.open).toBe(false);
-  });
-
-  // 「上の2グループが空のときは最初から開く」動きは、
-  // いまの制度データでは再現しにくいため、
-  // データを差し替えられる tests/all-collapsed.test.jsx で確認しています。
 });
 
 describe("候補になった理由が回答と連動する", () => {
@@ -801,3 +725,138 @@ describe("ブラウザの戻るボタン", () => {
 //   制度データに必要な項目がすべて揃っている → tests/data.test.js
 //   制度データの公式URLが正しい形式である   → tests/data.test.js
 //   情報確認日が古い制度を検出できる         → tests/data.test.js
+
+describe("JASSO 貸与奨学金のカード", () => {
+  /** 貸与奨学金のカードを取り出す */
+  function 貸与カード() {
+    return [...document.querySelectorAll("article")].find((要素) =>
+      要素.textContent.includes("JASSO 貸与奨学金")
+    );
+  }
+
+  it("公式確認済みなので「サンプルデータ」が付かない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    expect(貸与カード().querySelector(".sn-tag-sample")).toBeNull();
+  });
+
+  it("第一種が「無利子」と表示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const カード = 貸与カード();
+    expect(カード.textContent).toContain("第一種奨学金");
+    expect(カード.textContent).toContain("無利子");
+    expect(カード.textContent).toMatch(/第一種[\s\S]{0,80}利子は付きません/);
+  });
+
+  it("第二種が「有利子」と表示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const カード = 貸与カード();
+    expect(カード.textContent).toContain("第二種奨学金");
+    expect(カード.textContent).toContain("有利子");
+    expect(カード.textContent).toMatch(/第二種[\s\S]{0,80}利子も付きます/);
+  });
+
+  it("【重要】返す必要があることが明示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const カード = 貸与カード();
+    expect(カード.textContent).toMatch(/返す必要/);
+    // 「貸与」という言葉だけで終わらせず、意味を書いている
+    expect(カード.textContent).toMatch(/卒業後などに返していくお金/);
+  });
+
+  it("【重要】第二種の具体的な利率を固定表示していない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const カード = 貸与カード();
+    // 「年0.3％」のような数字を画面に出さない（利率は変わるため）
+    expect(カード.textContent).not.toMatch(/\d\s*[%％]/);
+    expect(カード.textContent).not.toMatch(/利率は\s*[\d.]/);
+    // 代わりに、いつ決まるかと公式確認を案内する
+    expect(カード.textContent).toMatch(/借り終わるときに決まります/);
+  });
+
+  it("【重要】第一種か第二種かを判定していない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 画面 = document.body.textContent;
+    for (const 危険な言い方 of [
+      "第一種の対象です",
+      "第二種なら借りられます",
+      "第一種を利用できます",
+      "第二種が利用できます",
+    ]) {
+      expect(画面).not.toContain(危険な言い方);
+    }
+    // 判定できないことを、はっきり書いている
+    expect(貸与カード().textContent).toMatch(
+      /どちらに当てはまるかは、このアプリでは判断できません/
+    );
+  });
+
+  it("【重要】給付奨学金との併給調整の注意が表示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const カード = 貸与カード();
+    expect(カード.textContent).toMatch(/給付奨学金と第一種奨学金を併せて利用する場合/);
+    expect(カード.textContent).toMatch(/貸与月額が調整されます/);
+    expect(カード.textContent).toMatch(/0円になることもあります/);
+  });
+
+  it("注意事項が、専用の見出しつきで表示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    expect(貸与カード().querySelector(".sn-cautions")).not.toBeNull();
+    expect(貸与カード().textContent).toContain("申し込む前に知っておきたいこと");
+  });
+
+  it("【重要】貸与制度が「特に確認したほうがよい」に入らない", async () => {
+    // 返済が必要な制度を、給付・減免より強くすすめているように見せない
+    for (const パターン of [回答パターンA, 回答パターンB, 回答パターンC]) {
+      const { unmount } = render(<ShingakuNavi />);
+      await 最後まで回答する(パターン);
+
+      expect(グループの制度名("特に確認したほうがよい制度")).not.toContain(
+        "JASSO 貸与奨学金（第一種・第二種）"
+      );
+      unmount();
+    }
+  });
+
+  it("給付・減免の制度より後ろに表示される", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const 並び = 表示中の制度名();
+    expect(並び.indexOf("高等教育の修学支援新制度")).toBeLessThan(
+      並び.indexOf("JASSO 貸与奨学金（第一種・第二種）")
+    );
+  });
+
+  it("具体的な貸与月額の一覧を画面に載せていない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    // 「月額54,000円」のような金額を出さない
+    expect(貸与カード().textContent).not.toMatch(/\d{1,3},\d{3}\s*円/);
+    expect(貸与カード().textContent).not.toMatch(/月額\s*\d/);
+  });
+
+  it("申込期限を全国共通の日付で書いていない", async () => {
+    render(<ShingakuNavi />);
+    await 最後まで回答する(回答パターンA);
+
+    const カード = 貸与カード();
+    expect(カード.textContent).not.toMatch(/\d{1,2}月\d{1,2}日(まで|締切)/);
+  });
+});

@@ -6,12 +6,14 @@
   "replaces": [],
   "provider": "民間の団体・財団",
   "type": null,
+  "variants": null,
   "educationStage": null,
   "summary": "会社や財団が行っている奨学金です。返さなくてよいものが多く、応募したい理由を書いて申し込む形式がよくあります。団体ごとに内容も時期もちがいます。",
   "whyCheck": [
     "返さなくてよいものが多く、国の制度と重ねて使える場合があります。",
     "募集の時期が団体ごとにばらばらなので、早めに知っておくと間に合います。"
   ],
+  "cautions": [],
   "mainConditions": null,
   "incomeConditions": null,
   "otherConditions": null,
@@ -27,12 +29,23 @@
     "excludeIf": {},
     "signals": [
       {
-        "when": { "familySupport": ["difficult", "partial", "unknown"] },
+        "when": {
+          "familySupport": [
+            "difficult",
+            "partial",
+            "unknown"
+          ]
+        },
         "reason": "返さなくてよいものが多く、国の制度と重ねて使える場合があるため、あわせて確認する価値があります。",
         "strength": "normal"
       },
       {
-        "when": { "grade": ["hs3", "graduate"] },
+        "when": {
+          "grade": [
+            "hs3",
+            "graduate"
+          ]
+        },
         "reason": "進学までの時間が短いため、募集の時期を早めに確認しておくと間に合います。",
         "strength": "normal"
       }

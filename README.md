@@ -136,7 +136,7 @@ data/programs/
 ├── _TEMPLATE-program.json  ← 制度を作るときの雛形
 ├── _TEMPLATE-guide.json    ← 案内を作るときの雛形
 ├── 01-mext-shugaku.json    ← 高等教育の修学支援新制度（公式確認済み）
-├── 02-jasso-taiyo.json     ← JASSO 貸与型奨学金
+├── 02-jasso-taiyo.json     ← JASSO 貸与奨学金（公式確認済み）
 ├── 03-school-genmen.json   ← 志望校独自の支援を確認する
 ├── 04-local-gov.json       ← 住んでいる自治体の支援を確認する
 ├── 05-minkan.json          ← 民間団体・財団の奨学金を確認する
@@ -185,6 +185,8 @@ data/programs/
 | `aliases` | 別の呼び名（探すときの手がかり） | `["給付奨学金"]` |
 | `replaces` | まとめた古いデータの `id` | `["jasso-kyufu"]` |
 | `sources` | **根拠にした公式ページの記録** | 下で説明します |
+| `variants` | 1つの制度の中の種類（無ければ `null`） | 第一種／第二種 |
+| `cautions` | 申し込む前に知っておきたい注意（画面に出ます） | 併給調整の注意 |
 | `name` | 名前（guide は「〜を確認する」という行動の形にする） | `高等教育の修学支援新制度` |
 | `provider` | やっているところ | `国（日本学生支援機構）` |
 | `type` | 種類（guide は `null`） | `給付型` `貸与型` `減免` `減免＋給付型` |
@@ -317,6 +319,33 @@ data/programs/
 
 **まとめサイトやブログを根拠にできない**ようにするためです。
 
+### `variants`（1つの制度の中の種類）
+
+同じ制度の中に種類があるときに使います。**別のカードに分けないでください。** 申し込み窓口も時期も同じものを分けると、別々の制度に見えてしまいます。
+
+```json
+"variants": [
+  { "id": "first",  "name": "第一種奨学金", "interest": "無利子",
+    "summary": "返す必要はありますが、利子は付きません。" },
+  { "id": "second", "name": "第二種奨学金", "interest": "有利子",
+    "summary": "返す必要があり、利子も付きます。" }
+]
+```
+
+種類が無い制度は `null` にしてください。
+
+### `cautions`（申し込む前の注意）
+
+**画面に黄色い枠で表示されます。** 知らずに申し込むと困ることを、短く書きます。
+
+```json
+"cautions": [
+  "給付奨学金と第一種奨学金を併せて利用する場合、第一種の貸与月額が調整されます。"
+]
+```
+
+**書いてよいのは、公式情報で確認できたことだけ**です。「あなたの場合はいくら減ります」のような個別の計算はしません。
+
 ### `replaces`（まとめた記録）
 
 2つのデータを1枚にまとめたときは、消えた側の `id` を記録します。
@@ -405,6 +434,7 @@ tests/data.test.js                制度データの検査
 tests/matching.test.js            確認する順番の決め方の検査
 tests/empty-programs.test.jsx     制度が0件のときのテスト
 tests/all-collapsed.test.jsx      シグナルが1つも当たらないときのテスト
+tests/collapse.test.jsx           折りたたみと確認状態の札のテスト
 tests/safety.test.js              危険な表現が混ざっていないかのテスト
 tests/helpers/dangerousPhrases.js 危険な言い回しを見つける仕組み
 tests/fixtures/                   Ver.0 の記録（比較用・書き換えない）

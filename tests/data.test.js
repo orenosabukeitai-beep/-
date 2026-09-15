@@ -311,3 +311,89 @@ describe("雛形ファイル", () => {
     expect(guide雛形.recordType).toBe("guide");
   });
 });
+
+describe("JASSO 貸与奨学金のデータ", () => {
+  const 貸与 = 制度データ.find((制度) => 制度.id === "jasso-taiyo");
+
+  it("公式確認済み（verified）になっている", () => {
+    expect(貸与.status).toBe("verified");
+    expect(貸与.checkedAt).toBe("2026-09-16");
+  });
+
+  it("【重要】officialUrl が外部のJASSO公式URLである", () => {
+    expect(貸与.officialUrl).toMatch(/^https:\/\/www\.jasso\.go\.jp\//);
+    // リポジトリ内のパスや GitHub のURLが入っていないこと
+    expect(貸与.officialUrl).not.toMatch(/github|blob|raw\.|^\/|^\.\//i);
+  });
+
+  it("【重要】sources がすべて外部のJASSO公式URLである", () => {
+    expect(貸与.sources.length).toBeGreaterThanOrEqual(9);
+    for (const source of 貸与.sources) {
+      expect(source.url).toMatch(/^https:\/\/www\.jasso\.go\.jp\//);
+      expect(source.url).not.toMatch(/github|blob|raw\./i);
+      expect(source.checkedAt).toBe("2026-09-16");
+    }
+  });
+
+  it("第一種と第二種が variants に入っている", () => {
+    const id一覧 = 貸与.variants.map((種類) => 種類.id);
+    expect(id一覧).toEqual(["first", "second"]);
+
+    const 第一種 = 貸与.variants.find((v) => v.id === "first");
+    const 第二種 = 貸与.variants.find((v) => v.id === "second");
+    expect(第一種.interest).toBe("無利子");
+    expect(第二種.interest).toBe("有利子");
+  });
+
+  it("【重要】貸与の signal に strong が無い", () => {
+    // 返済が必要な制度を、給付・減免より強くすすめているように見せない
+    const 強さ = 貸与.matching.signals.map((シグナル) => シグナル.strength);
+    expect(強さ).not.toContain("strong");
+  });
+
+  it("【重要】excludeIf を設定していない", () => {
+    expect(貸与.matching.excludeIf).toEqual({});
+  });
+
+  it("【重要】具体的な利率を書いていない", () => {
+    const 全文 = JSON.stringify(貸与);
+    expect(全文).not.toMatch(/\d\s*[%％]/);
+    expect(全文).not.toMatch(/年利/);
+  });
+
+  it("【重要】具体的な貸与月額を書いていない", () => {
+    const 全文 = JSON.stringify(貸与);
+    expect(全文).not.toMatch(/\d{1,3},\d{3}\s*円/);
+  });
+
+  it("【重要】全国共通の締切日を書いていない", () => {
+    const 全文 = JSON.stringify(貸与);
+    expect(全文).not.toMatch(/\d{1,2}月\d{1,2}日(まで|締切)/);
+    // 代わりに学校へ確認するよう案内している
+    expect(貸与.applicationPeriod).toMatch(/高校の奨学金担当・進路担当の先生に確認/);
+  });
+
+  it("給付奨学金との併給調整が cautions に書かれている", () => {
+    expect(貸与.cautions.join("")).toMatch(/併せて利用する場合/);
+    expect(貸与.cautions.join("")).toMatch(/貸与月額が調整されます/);
+  });
+
+  it("第一種・第二種のどちらに当てはまるかを判定しないと書かれている", () => {
+    expect(貸与.cautions.join("")).toMatch(/このアプリでは判断できません/);
+  });
+});
+
+describe("公式確認済みの制度の一覧", () => {
+  it("いま verified なのは2件（修学支援新制度と貸与奨学金）", () => {
+    const 確認済み = 制度データ
+      .filter((制度) => 制度.status === "verified")
+      .map((制度) => 制度.id);
+    expect(確認済み.sort()).toEqual(["jasso-taiyo", "mext-shugaku"]);
+  });
+
+  it("verified の制度は、すべて program である", () => {
+    for (const 制度 of 制度データ.filter((p) => p.status === "verified")) {
+      expect(制度.recordType).toBe("program");
+    }
+  });
+});

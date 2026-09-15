@@ -6,6 +6,7 @@
   "replaces": [],
   "provider": "国・自治体・民間の団体",
   "type": null,
+  "variants": null,
   "educationStage": null,
   "summary": "施設や里親家庭で暮らした（暮らしている）人が進学するときに使える支援があります。国・自治体・民間の団体がそれぞれ行っているため、まず相談先に聞くのが近道です。",
   "whyCheck": [
@@ -13,6 +14,7 @@
     "住む場所や生活費まで含めて相談できる先があります。",
     "施設の職員や自治体の担当者が、手続きを一緒に進めてくれる場合があります。"
   ],
+  "cautions": [],
   "mainConditions": null,
   "incomeConditions": null,
   "otherConditions": null,
@@ -25,10 +27,18 @@
   "notes": null,
   "status": "draft",
   "matching": {
-    "excludeIf": { "careBackground": ["no"] },
+    "excludeIf": {
+      "careBackground": [
+        "no"
+      ]
+    },
     "signals": [
       {
-        "when": { "careBackground": ["yes"] },
+        "when": {
+          "careBackground": [
+            "yes"
+          ]
+        },
         "reason": "施設や里親家庭で暮らした経験があると答えたため、専用の支援があるかどうかを確認する価値があります。",
         "strength": "strong"
       }

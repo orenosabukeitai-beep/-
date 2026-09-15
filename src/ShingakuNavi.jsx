@@ -344,6 +344,34 @@ const CSS = `
 .sn-tag-guide { background: #eceff1; color: #46606b; }
 .sn-card-name { font-size: 1.0625rem; font-weight: 700; line-height: 1.5; margin-bottom: .5rem; }
 .sn-card-summary { font-size: .9375rem; color: #3d5760; margin-bottom: .875rem; }
+.sn-variants { display: grid; gap: .5rem; margin-bottom: .875rem; }
+.sn-variant {
+  border: 1px solid var(--line); border-radius: .75rem;
+  padding: .6875rem .875rem; background: #fbfdfc;
+}
+.sn-variant-head { display: flex; align-items: center; flex-wrap: wrap; gap: .375rem; margin-bottom: .25rem; }
+.sn-variant-name { font-size: .9375rem; font-weight: 700; }
+.sn-variant-mark {
+  font-size: .75rem; font-weight: 700; border-radius: .375rem;
+  padding: .125rem .5rem; background: var(--primary-soft); color: var(--primary);
+}
+.sn-variant-summary { font-size: .875rem; color: #3d5760; }
+
+.sn-cautions {
+  background: var(--sun-soft); border-radius: .75rem;
+  padding: .8125rem .9375rem; margin-bottom: .875rem;
+}
+.sn-cautions-head { font-size: .8125rem; font-weight: 700; color: #6b5110; margin-bottom: .375rem; }
+.sn-cautions li {
+  font-size: .8125rem; color: #6b5110; padding-left: 1rem;
+  position: relative; margin-bottom: .375rem; line-height: 1.7;
+}
+.sn-cautions li:last-child { margin-bottom: 0; }
+.sn-cautions li::before {
+  content: ""; position: absolute; left: 0; top: .5625rem;
+  width: .375rem; height: .375rem; border-radius: 50%; background: #c08a1a;
+}
+
 .sn-why { background: #f6faf8; border-radius: .75rem; padding: .8125rem .9375rem; margin-bottom: .875rem; }
 .sn-why-head { font-size: .8125rem; font-weight: 700; margin-bottom: .375rem; }
 .sn-why li { font-size: .875rem; color: #3d5760; padding-left: 1rem; position: relative; margin-bottom: .25rem; }
@@ -585,6 +613,34 @@ function ProgramCard({ program, answerReasons = [] }) {
 
       <h4 className="sn-card-name">{program.name}</h4>
       <p className="sn-card-summary">{program.summary}</p>
+
+      {/* 1つの制度の中に種類があるとき（例：第一種＝無利子、第二種＝有利子）*/}
+      {program.variants?.length > 0 && (
+        <ul className="sn-variants">
+          {program.variants.map((種類) => (
+            <li className="sn-variant" key={種類.id}>
+              <div className="sn-variant-head">
+                <span className="sn-variant-name">{種類.name}</span>
+                {種類.interest && (
+                  <span className="sn-variant-mark">{種類.interest}</span>
+                )}
+              </div>
+              <p className="sn-variant-summary">{種類.summary}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {program.cautions?.length > 0 && (
+        <div className="sn-cautions">
+          <div className="sn-cautions-head">申し込む前に知っておきたいこと</div>
+          <ul>
+            {program.cautions.map((注意, i) => (
+              <li key={i}>{注意}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="sn-why">
         <div className="sn-why-head">
