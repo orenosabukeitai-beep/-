@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="進学支援ナビ">
+  <rect width="32" height="32" rx="7" fill="#14746a" />
+  <path d="M16 7.5 3.5 12.7 16 17.9l12.5-5.2L16 7.5Z" fill="#ffffff" />
+  <path d="M9.2 16.2v4.4c0 1.9 3.05 3.4 6.8 3.4s6.8-1.5 6.8-3.4v-4.4L16 19.1l-6.8-2.9Z" fill="#ffffff" opacity=".8" />
+</svg>

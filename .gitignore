@@ -2,3 +2,8 @@ node_modules
 dist
 .DS_Store
 *.local
+
+# テストが自動で作るフォルダ（保存する必要はありません）
+playwright-report
+test-results
+coverage
