@@ -75,4 +75,14 @@ export default [
       globals: globals.node,
     },
   },
+
+  // 検証用スクリプト（Node.js で動くが、ブラウザの中で動かす処理も書く）
+  {
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
 ];
