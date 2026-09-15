@@ -1,0 +1,23 @@
+{
+  "id": "minkan",
+  "name": "民間団体・企業の財団が行う奨学金",
+  "provider": "民間の団体・財団",
+  "type": "給付型",
+  "educationStage": null,
+  "summary": "会社や財団が行っている奨学金です。返さなくてよいものが多く、応募したい理由を書いて申し込む形式がよくあります。",
+  "whyCheck": [
+    "返さなくてよいものが多く、国の制度と重ねて使える場合があります。",
+    "募集の時期が団体ごとにばらばらなので、早めに知っておくと間に合います。"
+  ],
+  "mainConditions": null,
+  "incomeConditions": null,
+  "otherConditions": null,
+  "supportContent": null,
+  "applicationPeriod": null,
+  "officialUrl": null,
+  "officialText": "高校の進路担当の先生に、学校に届いている募集がないか聞いてみてください。",
+  "checkedAt": null,
+  "notes": null,
+  "status": "draft",
+  "matching": {}
+}

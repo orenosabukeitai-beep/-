@@ -27,23 +27,28 @@
 - React 18 + Vite。ビルドツール以外の依存は入れていない。
 - 状態管理ライブラリ、UIライブラリ、CSSフレームワークは使っていない。
   スタイルは `src/ShingakuNavi.jsx` 内の `CSS` という文字列にまとめてある。
-- 全体が `src/ShingakuNavi.jsx` の1ファイルに入っている。Ver.0の段階では意図的にこうしている。
-  ファイル分割は、画面数が増えて読みにくくなってから行う。
+- 制度データは `data/programs/` に JSON で分離済み（第2段階で実施）。
+  画面と質問は `src/ShingakuNavi.jsx` にまとまっている。
+  画面ごとのファイル分割は、第3段階で結果画面を作り替えるときに行う。
 
 ## ファイルの役割
 
 ```
-index.html              ページの入れ物
-src/main.jsx            アプリの起動
-src/index.css           背景と高さだけの最小限のCSS
-src/ShingakuNavi.jsx    アプリ本体（データ・質問・判定・画面すべて）
+index.html                  ページの入れ物
+data/programs/*.json        制度データ（制度1件 = ファイル1つ）
+data/programs/_TEMPLATE.json 新しい制度を作るときの雛形。制度として読み込まれない
+src/main.jsx                アプリの起動
+src/index.css               背景と高さだけの最小限のCSS
+src/lib/loadPrograms.js     data/programs/ を自動で読み込む
+src/lib/schema.js           制度データの決まりごとと検査
+src/ShingakuNavi.jsx        アプリ本体（質問・判定・画面）
 ```
 
 `src/ShingakuNavi.jsx` の中は、上から順にこうなっている。
 
 | 名前 | 中身 |
 | --- | --- |
-| `SHIENDATA` | 支援制度のデータ。ここを編集すると制度が増減する |
+| `SHIENDATA` | `data/programs/` から読み込んだ制度データ（ここには直接書かない） |
 | `QUESTIONS` | STEP 1 の質問と選択肢 |
 | `ACTION_POOL` | STEP 3 の「次にやること」の候補。`priority` が小さいほど上に出る |
 | `CSS` | 画面のスタイル |
@@ -53,10 +58,26 @@ src/ShingakuNavi.jsx    アプリ本体（データ・質問・判定・画面�
 
 ## 制度データの扱い
 
-`SHIENDATA` の各件には `verified` がある。公式サイトで内容を確認したものだけ `true` にする。
-`false` のあいだはカードに「サンプルデータ」と表示される。この表示を外す変更はしない。
+制度データは `data/programs/` にある。**`src/` の中に制度を直接書かない。**
+ファイルを1つ置けば自動で読み込まれる。読み込みの仕組みを書き換える必要はない。
 
-現在入っている7件は、すべて `verified: false` の初期サンプル。実データへの置き換えが最初の作業。
+各制度には `status` がある。公式サイトで内容を確認したものだけ `"verified"` にする。
+`"draft"` のあいだはカードに「サンプルデータ」と表示される。この表示を外す変更はしない。
+
+現在入っている7件は、すべて `"draft"`（未確認）。Ver.0 の文章をそのまま移したもので、
+公式サイトとの照合はまだ済んでいない。実データへの置き換えが今後の作業。
+
+分からない項目は `null` にする。推測で埋めない。
+`verified` にするときは `checkedAt`（確認日）と `officialUrl` を必ず入れる。
+
+### マッチング結果を変えないこと
+
+`tests/fixtures/matching-baseline.json` に、回答1,728通りの結果が記録してある。
+`tests/matching.test.js` がこれと突き合わせるため、マッチングの挙動を変えると失敗する。
+
+第3段階でマッチングを意図的に改善するときは、基準データを作り直したうえで、
+「何をなぜ変えたか」をコミットメッセージに書く。それ以外の段階で基準データを
+書き換えてはいけない。
 
 ## 開発
 

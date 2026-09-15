@@ -1,0 +1,23 @@
+{
+  "id": "jasso-taiyo",
+  "name": "日本学生支援機構（JASSO）の貸与型奨学金",
+  "provider": "国（日本学生支援機構）",
+  "type": "貸与型",
+  "educationStage": null,
+  "summary": "卒業後に返していくタイプの奨学金です。利子がつかないものと、つくものがあります。多くの学生が利用しています。",
+  "whyCheck": [
+    "給付型だけでは足りないときに、組み合わせて使う人が多い制度です。",
+    "返す金額や期間は借り方で変わるので、申し込む前に仕組みを知っておくと安心です。"
+  ],
+  "mainConditions": null,
+  "incomeConditions": null,
+  "otherConditions": null,
+  "supportContent": null,
+  "applicationPeriod": null,
+  "officialUrl": "https://www.jasso.go.jp/",
+  "officialText": "日本学生支援機構（JASSO）のサイトで、貸与型の種類と返し方の説明を確認してください。",
+  "checkedAt": null,
+  "notes": null,
+  "status": "draft",
+  "matching": {}
+}

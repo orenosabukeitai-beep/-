@@ -1,0 +1,25 @@
+{
+  "id": "jasso-kyufu",
+  "name": "日本学生支援機構（JASSO）の給付型奨学金",
+  "provider": "国（日本学生支援機構）",
+  "type": "給付型",
+  "educationStage": null,
+  "summary": "返さなくてよいタイプの奨学金です。高校在学中に申し込む方法（予約採用）と、進学後に申し込む方法があります。",
+  "whyCheck": [
+    "返す必要がないため、卒業後の負担がいちばん小さい種類の支援です。",
+    "高校在学中に申し込めることがあり、高校の先生が窓口になる場合があります。"
+  ],
+  "mainConditions": null,
+  "incomeConditions": null,
+  "otherConditions": null,
+  "supportContent": null,
+  "applicationPeriod": null,
+  "officialUrl": "https://www.jasso.go.jp/",
+  "officialText": "日本学生支援機構（JASSO）のサイトで、給付型奨学金の対象と申し込み時期を確認してください。",
+  "checkedAt": null,
+  "notes": null,
+  "status": "draft",
+  "matching": {
+    "familySupport": ["difficult", "partial", "unknown"]
+  }
+}

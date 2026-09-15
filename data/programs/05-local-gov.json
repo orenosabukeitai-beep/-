@@ -1,0 +1,23 @@
+{
+  "id": "local-gov",
+  "name": "住んでいる自治体の奨学金・支援",
+  "provider": "都道府県・市区町村",
+  "type": "その他",
+  "educationStage": null,
+  "summary": "都道府県や市区町村が、その地域に住む人向けに行っている支援です。地域によってあるものとないものがあります。",
+  "whyCheck": [
+    "地域限定のため、応募する人が少ない場合があります。",
+    "国の制度と一緒に使えることがあります。"
+  ],
+  "mainConditions": null,
+  "incomeConditions": null,
+  "otherConditions": null,
+  "supportContent": null,
+  "applicationPeriod": null,
+  "officialUrl": null,
+  "officialText": "住んでいる市区町村・都道府県の公式サイトを見るか、役所の窓口に聞いてください。",
+  "checkedAt": null,
+  "notes": null,
+  "status": "draft",
+  "matching": {}
+}

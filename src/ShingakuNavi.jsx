@@ -1,159 +1,25 @@
 import React, { useState, useMemo } from "react";
+import 制度データ from "./lib/loadPrograms.js";
 
 /* ============================================================
-   進学支援ナビ Ver.0
+   進学支援ナビ
 
    【制度データの追加・修正のしかた】
-   すぐ下の SHIENDATA という配列を編集するだけです。
-   1件ぶんをコピーして貼り付け、中身を書き換えれば増やせます。
+   制度のデータは、このファイルではなく
+     data/programs/
+   フォルダにあります。制度1件が JSON ファイル1つです。
 
-   name        : 制度の名前
-   category    : "給付型" / "貸与型" / "減免" / "その他" のどれか
-   provider    : だれがやっているか（国・学校・自治体・民間 など）
-   summary     : 1〜2文のかんたんな説明
-   whyCheck    : この制度を確認するとよい理由（文章の配列）
-   officialText: 公式情報を確認するときの案内文
-   officialUrl : 公式サイトのURL（無ければ "" にする）
-   verified    : あなたが公式サイトで内容を確認したら true にする
-                 false のあいだはカードに「サンプルデータ」と出ます
-   conditions  : 表示する条件。書かなかった項目は「条件なし」になります
-                 例）familySupport: ["difficult", "unknown"]
-                 と書くと、Q4でその答えを選んだ人にだけ表示されます
+   新しく増やすときは _TEMPLATE.json をコピーしてください。
+   フォルダにファイルを置くだけで、アプリが自動的に読み込みます。
+   このファイルを書き換える必要はありません。
 
-   使える条件キーと値：
-     grade         : "hs1" "hs2" "hs3" "graduate"
-     schoolType    : "national" "private" "both" "undecided"
-     living        : "home" "alone" "undecided"
-     familySupport : "difficult" "partial" "enough" "unknown"
-     researched    : "not_yet" "a_little" "already"
-     careBackground: "yes" "no" "skip"
+   くわしい手順は README.md の「制度データを追加・更新する」を見てください。
 
-   ※ 金額・所得の基準・締切はここに書かないでください。
-     古い情報が残ると、利用者が判断を誤ります。
+   ※ 金額・所得の基準・締切は、公式サイトで確認したものだけを書いてください。
+     古い情報や推測が残ると、利用者が判断を誤ります。
    ============================================================ */
 
-const SHIENDATA = [
-  {
-    id: "mext-shugaku",
-    name: "高等教育の修学支援新制度",
-    category: "減免",
-    provider: "国（文部科学省）",
-    summary:
-      "国が行っている制度で、大学や専門学校の授業料などの負担を軽くする支援と、返さなくてよい奨学金がセットになっています。対象かどうかは家庭の状況などで決まります。",
-    whyCheck: [
-      "家庭から学費を出してもらうのが難しい人が、最初に確認することが多い制度です。",
-      "対象になると、授業料の支援と給付型奨学金の両方につながる場合があります。",
-      "申し込みの時期が決まっているので、早めに知っておくほど選べる道が増えます。",
-    ],
-    officialText: "文部科学省のサイトで「高等教育の修学支援新制度」を探して、最新の条件を確認してください。",
-    officialUrl: "https://www.mext.go.jp/",
-    verified: false,
-    conditions: {
-      familySupport: ["difficult", "partial", "unknown"],
-    },
-  },
-  {
-    id: "jasso-kyufu",
-    name: "日本学生支援機構（JASSO）の給付型奨学金",
-    category: "給付型",
-    provider: "国（日本学生支援機構）",
-    summary:
-      "返さなくてよいタイプの奨学金です。高校在学中に申し込む方法（予約採用）と、進学後に申し込む方法があります。",
-    whyCheck: [
-      "返す必要がないため、卒業後の負担がいちばん小さい種類の支援です。",
-      "高校在学中に申し込めることがあり、高校の先生が窓口になる場合があります。",
-    ],
-    officialText: "日本学生支援機構（JASSO）のサイトで、給付型奨学金の対象と申し込み時期を確認してください。",
-    officialUrl: "https://www.jasso.go.jp/",
-    verified: false,
-    conditions: {
-      familySupport: ["difficult", "partial", "unknown"],
-    },
-  },
-  {
-    id: "jasso-taiyo",
-    name: "日本学生支援機構（JASSO）の貸与型奨学金",
-    category: "貸与型",
-    provider: "国（日本学生支援機構）",
-    summary:
-      "卒業後に返していくタイプの奨学金です。利子がつかないものと、つくものがあります。多くの学生が利用しています。",
-    whyCheck: [
-      "給付型だけでは足りないときに、組み合わせて使う人が多い制度です。",
-      "返す金額や期間は借り方で変わるので、申し込む前に仕組みを知っておくと安心です。",
-    ],
-    officialText: "日本学生支援機構（JASSO）のサイトで、貸与型の種類と返し方の説明を確認してください。",
-    officialUrl: "https://www.jasso.go.jp/",
-    verified: false,
-    conditions: {},
-  },
-  {
-    id: "school-genmen",
-    name: "志望校が独自に行っている学費の支援",
-    category: "減免",
-    provider: "大学・専門学校",
-    summary:
-      "学校が自分で用意している授業料の減免や、成績などで選ばれる制度です。学校によって名前も内容もちがいます。",
-    whyCheck: [
-      "国の制度とは別に申し込めることがあり、見落とされやすい支援です。",
-      "志望校を選ぶときの判断材料になります。",
-    ],
-    officialText: "志望校の公式サイトで「学費」「奨学金」「授業料減免」のページを見てください。",
-    officialUrl: "",
-    verified: false,
-    conditions: {},
-  },
-  {
-    id: "local-gov",
-    name: "住んでいる自治体の奨学金・支援",
-    category: "その他",
-    provider: "都道府県・市区町村",
-    summary:
-      "都道府県や市区町村が、その地域に住む人向けに行っている支援です。地域によってあるものとないものがあります。",
-    whyCheck: [
-      "地域限定のため、応募する人が少ない場合があります。",
-      "国の制度と一緒に使えることがあります。",
-    ],
-    officialText: "住んでいる市区町村・都道府県の公式サイトを見るか、役所の窓口に聞いてください。",
-    officialUrl: "",
-    verified: false,
-    conditions: {},
-  },
-  {
-    id: "minkan",
-    name: "民間団体・企業の財団が行う奨学金",
-    category: "給付型",
-    provider: "民間の団体・財団",
-    summary:
-      "会社や財団が行っている奨学金です。返さなくてよいものが多く、応募したい理由を書いて申し込む形式がよくあります。",
-    whyCheck: [
-      "返さなくてよいものが多く、国の制度と重ねて使える場合があります。",
-      "募集の時期が団体ごとにばらばらなので、早めに知っておくと間に合います。",
-    ],
-    officialText: "高校の進路担当の先生に、学校に届いている募集がないか聞いてみてください。",
-    officialUrl: "",
-    verified: false,
-    conditions: {},
-  },
-  {
-    id: "care-leaver",
-    name: "児童養護施設等で暮らした経験のある人への進学支援",
-    category: "その他",
-    provider: "国・自治体・民間の団体",
-    summary:
-      "施設や里親家庭で暮らした（暮らしている）人が進学するときに使える支援があります。生活費を含めて相談できる窓口もあります。",
-    whyCheck: [
-      "一般の奨学金とは別に、専用の支援が用意されていることがあります。",
-      "住む場所や生活費まで含めて相談できる先があります。",
-      "施設の職員や自治体の担当者が、手続きを一緒に進めてくれる場合があります。",
-    ],
-    officialText: "施設の職員や、自治体の児童福祉の窓口に「進学したい」と伝えて、使える支援を教えてもらってください。",
-    officialUrl: "",
-    verified: false,
-    conditions: {
-      careBackground: ["yes"],
-    },
-  },
-];
+const SHIENDATA = 制度データ;
 
 /* ============================================================
    質問（STEP 1）
@@ -505,9 +371,9 @@ const CATEGORY_NOTE = {
    判定のロジック
    ============================================================ */
 
-function matchPrograms(answers) {
+export function matchPrograms(answers) {
   return SHIENDATA.filter((program) => {
-    const conditions = program.conditions || {};
+    const conditions = program.matching || {};
     return Object.keys(conditions).every((key) => {
       const allowed = conditions[key];
       if (!allowed || allowed.length === 0) return true;
@@ -649,15 +515,15 @@ function Question({ index, total, question, current, onAnswer, onBack }) {
 }
 
 function ProgramCard({ program }) {
-  const tagStyle = CATEGORY_STYLE[program.category] || CATEGORY_STYLE["その他"];
+  const tagStyle = CATEGORY_STYLE[program.type] || CATEGORY_STYLE["その他"];
   return (
     <article className="sn-card">
       <div className="sn-card-top">
         <span className="sn-tag" style={tagStyle}>
-          {program.category}・{CATEGORY_NOTE[program.category]}
+          {program.type}・{CATEGORY_NOTE[program.type]}
         </span>
         <span className="sn-tag sn-tag-provider">{program.provider}</span>
-        {!program.verified && (
+        {program.status !== "verified" && (
           <span className="sn-tag sn-tag-sample">サンプルデータ</span>
         )}
       </div>

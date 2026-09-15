@@ -1,0 +1,26 @@
+{
+  "id": "mext-shugaku",
+  "name": "高等教育の修学支援新制度",
+  "provider": "国（文部科学省）",
+  "type": "減免",
+  "educationStage": null,
+  "summary": "国が行っている制度で、大学や専門学校の授業料などの負担を軽くする支援と、返さなくてよい奨学金がセットになっています。対象かどうかは家庭の状況などで決まります。",
+  "whyCheck": [
+    "家庭から学費を出してもらうのが難しい人が、最初に確認することが多い制度です。",
+    "対象になると、授業料の支援と給付型奨学金の両方につながる場合があります。",
+    "申し込みの時期が決まっているので、早めに知っておくほど選べる道が増えます。"
+  ],
+  "mainConditions": null,
+  "incomeConditions": null,
+  "otherConditions": null,
+  "supportContent": null,
+  "applicationPeriod": null,
+  "officialUrl": "https://www.mext.go.jp/",
+  "officialText": "文部科学省のサイトで「高等教育の修学支援新制度」を探して、最新の条件を確認してください。",
+  "checkedAt": null,
+  "notes": null,
+  "status": "draft",
+  "matching": {
+    "familySupport": ["difficult", "partial", "unknown"]
+  }
+}

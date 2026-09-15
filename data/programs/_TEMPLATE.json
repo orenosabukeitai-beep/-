@@ -1,0 +1,20 @@
+{
+  "id": "",
+  "name": "",
+  "provider": "",
+  "type": "",
+  "educationStage": null,
+  "summary": "",
+  "whyCheck": [],
+  "mainConditions": null,
+  "incomeConditions": null,
+  "otherConditions": null,
+  "supportContent": null,
+  "applicationPeriod": null,
+  "officialUrl": null,
+  "officialText": "",
+  "checkedAt": null,
+  "notes": null,
+  "status": "draft",
+  "matching": {}
+}

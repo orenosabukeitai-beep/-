@@ -1,0 +1,23 @@
+{
+  "id": "school-genmen",
+  "name": "志望校が独自に行っている学費の支援",
+  "provider": "大学・専門学校",
+  "type": "減免",
+  "educationStage": null,
+  "summary": "学校が自分で用意している授業料の減免や、成績などで選ばれる制度です。学校によって名前も内容もちがいます。",
+  "whyCheck": [
+    "国の制度とは別に申し込めることがあり、見落とされやすい支援です。",
+    "志望校を選ぶときの判断材料になります。"
+  ],
+  "mainConditions": null,
+  "incomeConditions": null,
+  "otherConditions": null,
+  "supportContent": null,
+  "applicationPeriod": null,
+  "officialUrl": null,
+  "officialText": "志望校の公式サイトで「学費」「奨学金」「授業料減免」のページを見てください。",
+  "checkedAt": null,
+  "notes": null,
+  "status": "draft",
+  "matching": {}
+}
