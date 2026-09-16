@@ -328,7 +328,14 @@ const CSS = `
 .sn-more > summary:hover { background: #f6faf8; border-radius: 1rem; }
 .sn-more > summary:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .sn-more-title { font-size: .9375rem; font-weight: 600; }
-.sn-more-mark { flex: 0 0 auto; font-size: .8125rem; color: var(--primary); font-weight: 700; }
+/* 開閉の目印。「ひらく」のような言葉を持たせると、開いている状態と
+   食い違ってしまうため、向きが変わる印だけにしている */
+.sn-more-mark {
+  flex: 0 0 auto; width: .5rem; height: .5rem; margin-right: .25rem;
+  border-right: 2px solid var(--primary); border-bottom: 2px solid var(--primary);
+  transform: rotate(45deg);
+}
+.sn-more[open] > summary .sn-more-mark { transform: rotate(-135deg); margin-right: 0; margin-bottom: -.25rem; }
 .sn-more[open] > summary { border-bottom: 1px solid var(--line); border-radius: 1rem 1rem 0 0; }
 .sn-more-body { padding: 1rem 1.125rem .25rem; }
 .sn-more-note { font-size: .8125rem; color: var(--ink-soft); margin-bottom: .875rem; }
@@ -744,7 +751,7 @@ function Result({ answers, onRestart }) {
         <span className="sn-step-mark">STEP 2</span>
         <h2 className="sn-section-title">確認してみるとよい支援</h2>
         <p className="sn-section-note">
-          あなたの答えから、{表示件数}件が見つかりました。これは「受けられる」という意味ではなく、「調べてみる価値がある」という意味です。確認する順番の目安として並べています。
+          あなたの答えから、{表示件数}件が見つかりました。これは「受けられる」という意味ではなく、「調べてみる価値がある」という意味です。回答をもとに、確認するとよい支援を整理しています。
         </p>
       </div>
 
@@ -781,9 +788,7 @@ function Result({ answers, onRestart }) {
                 <span className="sn-more-title">
                   ほかにも確認できる制度があります（{知っておく.length}件）
                 </span>
-                <span className="sn-more-mark" aria-hidden="true">
-                  ひらく
-                </span>
+                <span className="sn-more-mark" aria-hidden="true" />
               </summary>
               <div className="sn-more-body">
                 <p className="sn-more-note">

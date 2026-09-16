@@ -17,11 +17,26 @@ const 回答パターンA = [
   "ある / いま暮らしている",
 ];
 
-/** 「知っておくとよい制度」が出るパターン（折りたたみの確認に使う） */
+/**
+ * 上のグループと折りたたみが同時に出ることを期待していたパターン。
+ * いまの制度2件はシグナルの条件が同じで、必ず同じグループに入るため、
+ * この状態は本物のデータでは作れません（tests/collapse.test.jsx で確認しています）。
+ * この定数を使うテストは、折りたたみが出ないときは自動でスキップされます。
+ */
 const 回答パターンB = [
   "高校3年生",
   "国公立を考えている",
   "自宅から通う予定",
+  "だいたい出してもらえそう",
+  "申し込みを考えている制度がある",
+  "ない",
+];
+
+/** すべての制度が折りたたみに入るパターン（このとき折りたたみは最初から開く） */
+const 回答パターンC = [
+  "高校1年生",
+  "まだ決めていない",
+  "まだ分からない",
   "だいたい出してもらえそう",
   "申し込みを考えている制度がある",
   "ない",
@@ -142,6 +157,55 @@ test("折りたたみが出るときは、正しく開閉できる", async ({ pa
 
   await つまみ.click();
   await expect(折りたたみ.locator("article").first()).toBeHidden();
+});
+
+test("折りたたみが最初から開くとき、つまみの表示が状態と食い違わない", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "質問を始める" }).click();
+  for (const 答え of 回答パターンC) {
+    await page.getByRole("button", { name: 答え, exact: true }).click();
+  }
+
+  const 折りたたみ = page.locator(".sn-more");
+  await expect(折りたたみ).toHaveCount(1);
+  // 上の2グループが空なので、最初から開いている
+  await expect(折りたたみ.locator("article").first()).toBeVisible();
+
+  // つまみの文字は開閉で変わらない。
+  // 「ひらく」「とじる」のような言葉を持たせると、開いている状態と食い違ってしまう。
+  const つまみ = 折りたたみ.locator("summary");
+  await expect(つまみ).not.toContainText("ひらく");
+  await expect(つまみ).not.toContainText("とじる");
+  await expect(つまみ).toContainText("ほかにも確認できる制度があります");
+
+  // かわりに、目印の向きで開いているかどうかが分かるようにしている
+  const 目印の向き = () =>
+    折りたたみ.locator(".sn-more-mark").evaluate((e) => getComputedStyle(e).transform);
+
+  const 開いているときの向き = await 目印の向き();
+  await つまみ.click();
+  await expect(折りたたみ.locator("article").first()).toBeHidden();
+  const 閉じたあとの向き = await 目印の向き();
+
+  expect(開いているときの向き).not.toBe(閉じたあとの向き);
+
+  // 文字のほうは変わっていない
+  await expect(つまみ).not.toContainText("ひらく");
+});
+
+test("制度が1つのまとまりにしか入らないときでも、説明文が「順番」を示さない", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "質問を始める" }).click();
+  for (const 答え of 回答パターンC) {
+    await page.getByRole("button", { name: 答え, exact: true }).click();
+  }
+
+  await expect(page.getByRole("heading", { name: "特に確認したほうがよい制度" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "確認する価値がある制度" })).toHaveCount(0);
+
+  const 説明 = page.locator(".sn-section-note").first();
+  await expect(説明).not.toContainText("順番");
+  await expect(説明).toContainText("確認するとよい支援を整理しています");
 });
 
 test("結果画面がひと目で読める長さにおさまっている", async ({ page }) => {
